@@ -1,0 +1,43 @@
+{
+  "name": "eda-format-converter",
+  "version": "1.0.0",
+  "description": "Convert PCB boards, symbols and footprints between KiCad, Eagle and EasyEDA — in the browser or from the command line.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p . && vite build",
+    "cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs",
+    "test": "vitest run",
+    "samples": "esbuild scripts/make-samples.ts --bundle --platform=node --format=esm --outfile=dist/make-samples.mjs && node dist/make-samples.mjs"
+  },
+  "keywords": [
+    "kicad",
+    "eagle",
+    "easyeda",
+    "pcb",
+    "eda",
+    "converter",
+    "footprint",
+    "symbol"
+  ],
+  "author": "Abdulhamid Baghdadi",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2",
+    "fflate": "^0.8.3"
+  },
+  "bin": {
+    "eda-convert": "dist/cli.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Abdulhamid-Baghdadi/eda-format-converter"
+  }
+}

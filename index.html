@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EDA Format Converter — KiCad ⇄ Eagle ⇄ EasyEDA</title>
+  <meta name="description" content="Convert PCB boards, symbols and footprints between KiCad, Eagle and EasyEDA in your browser. Files never leave your computer." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23146b5a'/%3E%3Cpath d='M8 11h9l-3-3M24 21h-9l3 3' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <script>
+    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" class="logo" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 11h9l-3-3M24 21h-9l3 3"/></svg>
+      <div>
+        <h1>EDA Format Converter</h1>
+        <p class="tag">KiCad ⇄ Eagle ⇄ EasyEDA · boards, symbols &amp; footprints · runs entirely in your browser</p>
+      </div>
+    </div>
+    <nav class="toplinks">
+      <button id="matrixBtn" class="ghost">What converts?</button>
+      <a class="ghost" href="https://github.com/Abdulhamid-Baghdadi/eda-format-converter" target="_blank" rel="noopener">GitHub</a>
+      <button id="themeBtn" class="ghost icon" title="Toggle light/dark" aria-label="Toggle light/dark theme">◐</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="controls">
+      <label id="drop" class="drop" tabindex="0">
+        <input id="fileInput" type="file" multiple accept=".kicad_mod,.kicad_sym,.kicad_pcb,.lbr,.brd,.json,.zip" hidden />
+        <div class="drop-inner">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <div><strong>Drop files or a .zip here</strong> or click to browse<br /><span class="muted">.kicad_pcb · .kicad_mod · .kicad_sym · .pretty zip · Eagle .brd / .lbr · EasyEDA Standard .json</span></div>
+        </div>
+      </label>
+      <div class="target">
+        <span class="label">Convert to</span>
+        <div class="seg" role="radiogroup" id="targetSeg">
+          <button role="radio" data-t="kicad" aria-checked="true">KiCad</button>
+          <button role="radio" data-t="eagle" aria-checked="false">Eagle</button>
+          <button role="radio" data-t="easyeda" aria-checked="false">EasyEDA</button>
+        </div>
+        <span class="muted small" id="targetHint">KiCad 8 format (opens in KiCad 8, 9, 10)</span>
+      </div>
+    </section>
+
+    <section id="empty" class="empty">
+      <div class="hub" aria-hidden="true">
+        <svg viewBox="0 0 300 250">
+          <g class="spokes">
+            <path d="M150 125 L150 42"/><path d="M150 125 L58 200"/><path d="M150 125 L242 200"/>
+          </g>
+          <circle cx="150" cy="125" r="44" class="core"/>
+          <text x="150" y="120" class="core-t">neutral</text><text x="150" y="136" class="core-t">model</text>
+          <g class="node kicad"><rect x="100" y="16" width="100" height="40" rx="20"/><text x="150" y="41">KiCad</text></g>
+          <g class="node eagle"><rect x="8" y="182" width="100" height="40" rx="20"/><text x="58" y="207">Eagle</text></g>
+          <g class="node easyeda"><rect x="192" y="182" width="100" height="40" rx="20"/><text x="242" y="207">EasyEDA</text></g>
+        </svg>
+        <p class="muted small">Every format has a reader <em>and</em> a writer around one shared model, so any source converts to any target, including the same format.</p>
+      </div>
+      <div class="try">
+        <h2>Try a sample</h2>
+        <p class="muted">Pick one, or drop your own files above. Switch the target any time; the preview updates instantly.</p>
+        <div class="samples" id="samples"></div>
+        <p class="privacy">🔒 Nothing is uploaded: parsing and conversion run locally in this page, and it keeps working offline once loaded.</p>
+      </div>
+    </section>
+
+    <section id="workspace" class="workspace" hidden>
+      <aside class="files">
+        <div class="files-head"><h3>Files</h3><button id="clearBtn" class="ghost small">Clear</button></div>
+        <ul id="fileList"></ul>
+        <div class="dl">
+          <button id="zipBtn" class="primary">Download all (.zip)</button>
+        </div>
+      </aside>
+      <div class="detail">
+        <div class="detail-head">
+          <div id="itemBar" class="itembar"></div>
+          <div id="outputs" class="outputs"></div>
+        </div>
+        <div class="viewer">
+          <div class="toolbar">
+            <div id="layers" class="layers"></div>
+            <div class="zoom"><button id="fitBtn" class="ghost small" title="Fit (double-click)">Fit</button><button id="unitPrev" class="ghost small" hidden>‹</button><span id="unitLabel" class="small muted"></span><button id="unitNext" class="ghost small" hidden>›</button></div>
+          </div>
+          <div class="panes">
+            <figure class="pane"><figcaption><span class="badge" id="srcBadge"></span> source</figcaption><svg id="srcSvg" class="canvas"></svg></figure>
+            <figure class="pane"><figcaption><span class="badge" id="dstBadge"></span> result <span class="muted small">(re-read from the written file)</span></figcaption><svg id="dstSvg" class="canvas"></svg></figure>
+          </div>
+        </div>
+        <div class="report">
+          <h3>Conversion report</h3>
+          <div id="summary" class="summary"></div>
+          <table id="reportTable"><thead><tr><th>Status</th><th>Item</th><th class="num">Count</th><th>Details</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="matrix">
+    <form method="dialog"><button class="ghost close" aria-label="Close">✕</button></form>
+    <h2>What converts</h2>
+    <div id="matrixBody"></div>
+  </dialog>
+
+  <footer>
+    MIT licensed · not affiliated with KiCad, Autodesk or EasyEDA · <a href="https://github.com/Abdulhamid-Baghdadi/eda-format-converter#limitations" target="_blank" rel="noopener">limitations</a>
+  </footer>
+  <script type="module" src="/src/web/main.ts"></script>
+</body>
+</html>
