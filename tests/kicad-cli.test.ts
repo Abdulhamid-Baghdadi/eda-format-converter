@@ -14,7 +14,7 @@ import { boardDiff } from './boardDiff';
 import { netlist, netlistDiff, type Netlist } from '../src/core/sch';
 
 function kicadNetlist(file: string): Netlist {
-  const x = file + '.net.xml';
+  const x = join(dir, file.replace(/^.*[\/]/, '') + '.net.xml');
   run(['sch', 'export', 'netlist', '--format', 'kicadxml', '-o', x, file]);
   const src = readFileSync(x, 'utf8');
   const nets: Netlist['nets'] = [];
