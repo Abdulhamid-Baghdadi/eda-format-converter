@@ -5,6 +5,7 @@ These sample files are not original to this project and keep their own licences.
 | File | Source | Licence |
 | --- | --- | --- |
 | `usb-power-adapter.PcbDoc` (renamed from `USB Power Adapter.PcbDoc`) | [issus/AltiumSharp](https://github.com/issus/AltiumSharp), `TestData/` | Apache License 2.0, Copyright (c) the AltiumSharp authors |
+| `usb-power-adapter.SchDoc` (renamed from `USB Power.SchDoc`) | [issus/AltiumSharp](https://github.com/issus/AltiumSharp), `TestData/` | Apache License 2.0, Copyright (c) the AltiumSharp authors |
 | `QFN-24_4x4.PcbLib` (renamed from `PCB - LEADLESS - QFN - PSEMI QFN-24 4x4.PcbLib`) | [issus/AltiumSharp](https://github.com/issus/AltiumSharp), `TestData/` | Apache License 2.0, Copyright (c) the AltiumSharp authors |
 | `CM4.SchLib` | [QWaveSystems/QWAVE_Raspberry-Pi-CM4-Altium-Library](https://github.com/QWaveSystems/QWAVE_Raspberry-Pi-CM4-Altium-Library) | MIT, Copyright (c) 2020 QWaveSystems |
 

@@ -124,3 +124,78 @@ const zipFiles: Record<string, Uint8Array> = { 'demo-parts.kicad_sym': readFileS
 for (const f of readdirSync('samples-src/demo-parts.pretty')) zipFiles[`demo-parts.pretty/${f}`] = readFileSync(`samples-src/demo-parts.pretty/${f}`);
 writeFileSync(OUT + 'demo-parts.zip', zipSync(zipFiles, { level: 9, mtime: new Date('2026-01-01') }));
 console.log('library zip written');
+
+// ---------------------------------------------------------------- 555 blinker schematic (same nets as the board)
+import type { Schematic, Sheet, Symbol as Sym, Pin as SPin, Graphic as SG } from '../src/core/model';
+import { instancePins, pinOutward, netlist } from '../src/core/sch';
+import { writeKicadSchematic } from '../src/core/kicad/sch';
+const pin = (number: string, name: string, x: number, y: number, angle: number, length: number, type: SPin['type'] = 'passive', hidden = false): SPin => ({ number, name, at: { x, y }, angle, length, type, hidden });
+const line = (x1: number, y1: number, x2: number, y2: number, w = 0.254): SG => ({ type: 'line', a: { x: x1, y: y1 }, b: { x: x2, y: y2 }, width: w, layer: 'symbol' });
+const defs: Record<string, Sym> = {
+  NE555: { name: 'NE555', reference: 'U', value: 'NE555', footprint: 'Package_SO:SOIC-8_3.9x4.9mm_P1.27mm', description: 'Precision timer', properties: {}, units: [{
+    graphics: [{ type: 'rect', a: { x: -7.62, y: 7.62 }, b: { x: 7.62, y: -7.62 }, width: 0.254, layer: 'symbol', fill: true }],
+    pins: [pin('8', 'VCC', 0, 10.16, 270, 2.54, 'power_in'), pin('1', 'GND', 0, -10.16, 90, 2.54, 'power_in'), pin('4', 'R', -10.16, 5.08, 0, 2.54, 'input'),
+      pin('2', 'TR', -10.16, 0, 0, 2.54, 'input'), pin('6', 'THR', -10.16, -2.54, 0, 2.54, 'input'), pin('5', 'CV', -10.16, -5.08, 0, 2.54, 'input'),
+      pin('3', 'Q', 10.16, 2.54, 180, 2.54, 'output'), pin('7', 'DIS', 10.16, -2.54, 180, 2.54, 'open_collector')] }] },
+  R: { name: 'R', reference: 'R', value: 'R', properties: {}, units: [{ graphics: [{ type: 'rect', a: { x: -1.016, y: 2.54 }, b: { x: 1.016, y: -2.54 }, width: 0.254, layer: 'symbol' }],
+    pins: [pin('1', '~', 0, 3.81, 270, 1.27), pin('2', '~', 0, -3.81, 90, 1.27)] }] },
+  C: { name: 'C', reference: 'C', value: 'C', properties: {}, units: [{ graphics: [line(-2.032, 0.508, 2.032, 0.508, 0.508), line(-2.032, -0.508, 2.032, -0.508, 0.508)],
+    pins: [pin('1', '~', 0, 3.81, 270, 3.302), pin('2', '~', 0, -3.81, 90, 3.302)] }] },
+  LED: { name: 'LED', reference: 'D', value: 'LED', properties: {}, units: [{ graphics: [line(-1.27, -1.27, -1.27, 1.27), { type: 'poly', pts: [{ x: 1.27, y: -1.27 }, { x: 1.27, y: 1.27 }, { x: -1.27, y: 0 }], width: 0.254, layer: 'symbol', closed: true }, line(-0.5, 1.8, 0.6, 2.9, 0.15), line(0.4, 1.8, 1.5, 2.9, 0.15)],
+    pins: [pin('1', 'K', -3.81, 0, 0, 2.54), pin('2', 'A', 3.81, 0, 180, 2.54)] }] },
+  Conn_01x02: { name: 'Conn_01x02', reference: 'J', value: 'Conn_01x02', footprint: 'Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical', properties: {}, units: [{
+    graphics: [{ type: 'rect', a: { x: -1.27, y: 1.27 }, b: { x: 1.27, y: -3.81 }, width: 0.254, layer: 'symbol', fill: true }],
+    pins: [pin('1', 'Pin_1', -5.08, 0, 0, 3.81), pin('2', 'Pin_2', -5.08, -2.54, 0, 3.81)] }] },
+  GND: { name: 'GND', reference: '#PWR', value: 'GND', power: true, properties: {}, units: [{ graphics: [{ type: 'poly', pts: [{ x: 0, y: 0 }, { x: 0, y: -1.27 }, { x: 1.27, y: -1.27 }, { x: 0, y: -2.54 }, { x: -1.27, y: -1.27 }, { x: 0, y: -1.27 }], width: 0.254, layer: 'symbol', closed: false }],
+    pins: [pin('1', 'GND', 0, 0, 270, 0, 'power_in', true)] }] },
+  VCC: { name: 'VCC', reference: '#PWR', value: 'VCC', power: true, properties: {}, units: [{ graphics: [line(0, 0, 0, 1.27), line(-0.762, 1.27, 0.762, 1.27)],
+    pins: [pin('1', 'VCC', 0, 0, 90, 0, 'power_in', true)] }] },
+  PWR_FLAG: { name: 'PWR_FLAG', reference: '#FLG', value: 'PWR_FLAG', power: true, properties: {}, units: [{ graphics: [line(0, 0, 0, 1.27), { type: 'poly', pts: [{ x: 0, y: 1.27 }, { x: -1.016, y: 1.905 }, { x: 0, y: 2.54 }, { x: 1.016, y: 1.905 }], width: 0.254, layer: 'symbol', closed: true }],
+    pins: [pin('1', 'pwr', 0, 0, 90, 0, 'power_out')] }] },
+};
+const sheet: Sheet = { name: 'blinky-555', symbols: [], wires: [], buses: [], junctions: [], noConnects: [], labels: [], graphics: [] };
+const sch: Schematic = { name: 'blinky-555', symbols: defs, sheets: [sheet] };
+const T = (text: string, x: number, y: number) => ({ type: 'text' as const, text, at: { x, y }, size: 1.27, width: 0, rotation: 0, layer: 'symbol', justify: 'left' as const });
+// reference/value label offsets (dx, dy) per symbol, so the texts sit clear of pins and wires
+const LBL: Record<string, [number, number, number, number]> = { NE555: [2.54, -12.7, 2.54, 12.7], R: [2.54, -1.27, 2.54, 1.27], C: [3.3, -1.27, 3.3, 1.27], LED: [-1.27, -3.81, -1.27, 3.81], Conn_01x02: [-1.27, -2.54, -1.27, 5.08] };
+const place = (ref: string, lib: string, value: string, x: number, y: number, rotation = 0) => {
+  const fp = parts.find(p => p[0] === ref)?.[2];
+  const [rx, ry, vx, vy] = rotation ? [-1.27, -3.3, -1.27, 3.3] : LBL[lib];
+  const inst = { ref, value, lib, unit: 1, at: { x, y }, rotation, properties: {}, footprint: fp ? fp.replace('.pretty/', ':') : defs[lib].footprint, refText: T(ref, x + rx, y + ry), valueText: T(value, x + vx, y + vy) };
+  sheet.symbols.push(inst);
+  return inst;
+};
+const placed = [
+  place('U1', 'NE555', 'NE555', 127, 88.9), place('R1', 'R', '10k', 157.48, 76.2), place('R2', 'R', '47k', 157.48, 96.52), place('R3', 'R', '470', 172.72, 76.2, 90),
+  place('C1', 'C', '10uF', 101.6, 109.22), place('C2', 'C', '10nF', 116.84, 114.3), place('C3', 'C', '100nF', 88.9, 76.2), place('D1', 'LED', 'red', 195.58, 76.2), place('J1', 'Conn_01x02', 'PWR', 76.2, 96.52),
+];
+// every pin gets a short wire to a label of its net; supply pins end in a power symbol
+let pwrN = 0;
+for (const inst of placed) for (const { pin: p, at } of instancePins(sch, inst)) {
+  const net = netOf(inst.ref, p.number)!;
+  const a = pinOutward(inst, p) * Math.PI / 180;
+  const end = { x: +(at.x + Math.cos(a) * 2.54).toFixed(2), y: +(at.y - Math.sin(a) * 2.54).toFixed(2) };
+  sheet.wires.push({ a: at, b: end });
+  if (net === 'VCC' || net === 'GND') {
+    const pw = { ref: `#PWR0${++pwrN}`, value: net, lib: net, unit: 1, at: end, rotation: net === 'GND' ? (Math.abs(end.y - at.y) > 1 && end.y < at.y ? 180 : 0) : (end.y > at.y ? 180 : 0), properties: {} };
+    sheet.symbols.push(pw);
+  } else sheet.labels.push({ text: net, at: end, rotation: Math.round(a * 180 / Math.PI / 90) * 90 % 360, kind: 'local' });
+}
+// KiCad's ERC wants the supply nets marked as driven
+let flg = 0;
+for (const pw of sheet.symbols.filter(x => x.lib === 'VCC' || x.lib === 'GND').slice(0, 99)) {
+  if (flg >= 2 || !placed.find(x => x.ref === 'J1')) break;
+  const j1 = instancePins(sch, placed.find(x => x.ref === 'J1')!);
+  const wireEnds = j1.map(p => sheet.wires.find(w => w.a.x === p.at.x && w.a.y === p.at.y)?.b);
+  if (!wireEnds.some(e => e && e.x === pw.at.x && e.y === pw.at.y)) continue;
+  sheet.symbols.push({ ref: `#FLG0${++flg}`, value: 'PWR_FLAG', lib: 'PWR_FLAG', unit: 1, at: pw.at, rotation: pw.lib === 'GND' ? 180 : 0, properties: {} });
+}
+sheet.graphics.push({ type: 'text', text: '555 astable LED blinker — eda-format-converter sample', at: { x: 76.2, y: 60.96 }, size: 2, width: 0, rotation: 0, layer: 'Notes', justify: 'left' });
+// the schematic must have exactly the nets of the board
+const schNets = netlist(sch).nets.filter(n => n.pins.length > 1).map(n => n.pins.join(' ')).sort();
+const brdNets = Object.values(nets).map(v => v.slice().sort().join(' ')).sort();
+if (JSON.stringify(schNets) !== JSON.stringify(brdNets)) throw new Error(`schematic nets differ from board nets:\n${schNets.join('\n')}\n--\n${brdNets.join('\n')}`);
+for (const o of writeKicadSchematic(sch)) writeFileSync(OUT + o.name, o.data);
+const schDesign = { kind: 'schematic' as const, name: 'blinky-555', schematic: sch };
+for (const t of ['eagle', 'easyeda'] as const) for (const o of writeDesign(schDesign, t)) writeFileSync(OUT + o.name, o.data);
+console.log('schematic samples written');

@@ -10,7 +10,7 @@ const VERSION_SYM = 20231120;
 
 const pt = (n: string, p: { x: number; y: number }): W => [n, p.x, p.y];
 const stroke = (w: number): W => ['stroke', ['width', w], ['type', 'solid']];
-const effects = (t: { size: number; width?: number; mirror?: boolean; justify?: string; hidden?: boolean }): W => {
+export const effects = (t: { size: number; width?: number; mirror?: boolean; justify?: string; hidden?: boolean }): W => {
   const just: (string)[] = [];
   if (t.justify && t.justify !== 'center') just.push(t.justify);
   if (t.mirror) just.push('mirror');
@@ -121,6 +121,30 @@ function symGraphic(g: Graphic): W | null {
   }
 }
 
+/** One symbol definition as an S-expression (`name` may be "lib:name" inside a schematic's lib_symbols). */
+export function symbolSExpr(s: Symbol, name: string): W {
+  const base = name.replace(/^.*:/, '');
+  const ys = s.units.flatMap(u => [...u.pins.map(p => p.at.y), ...u.graphics.flatMap(g => g.type === 'rect' ? [g.a.y, g.b.y] : g.type === 'poly' ? g.pts.map(p => p.y) : [])]);
+  const top = ys.length ? Math.max(...ys) : 0, bot = ys.length ? Math.min(...ys) : 0;
+  const prop = (k: string, v: string, y: number, hide = false): W => ['property', q(k), q(v), ['at', 0, y, 0], effects({ size: 1.27, hidden: hide })];
+  const e: W = ['symbol', q(name)];
+  if (s.power) e.push(['power']);
+  e.push(['pin_names', ['offset', 0.508]], ['exclude_from_sim', 'no'], ['in_bom', s.power ? 'no' : 'yes'], ['on_board', s.power ? 'no' : 'yes']);
+  e.push(prop('Reference', s.reference || 'U', top + 2.54, !!s.power));
+  e.push(prop('Value', s.value ?? s.name, bot - 2.54));
+  e.push(prop('Footprint', s.footprint ?? '', bot - 5.08, true));
+  e.push(prop('Datasheet', s.datasheet ?? '', bot - 7.62, true));
+  e.push(prop('Description', s.description ?? '', bot - 10.16, true));
+  for (const [k, v] of Object.entries(s.properties)) if (k && !/^(Reference|Value|Footprint|Datasheet|Description)$/.test(k)) e.push(prop(k, v, 0, true));
+  s.units.forEach((u, i) => {
+    const body: W = ['symbol', q(`${base}_${i + 1}_1`)];
+    for (const g of u.graphics) { const x = symGraphic(g); if (x) body.push(x); }
+    for (const p of u.pins) body.push(pinSExpr(p));
+    e.push(body);
+  });
+  return e;
+}
+
 export function writeKicadSymbols(symbols: Symbol[], r = new Report()): string {
   const used = new Set<string>();
   const lib: W = ['kicad_symbol_lib', ['version', VERSION_SYM], ['generator', q(GENERATOR)]];
@@ -128,28 +152,9 @@ export function writeKicadSymbols(symbols: Symbol[], r = new Report()): string {
     let name = kicadName(s.name);
     while (used.has(name)) name += '_';
     used.add(name);
-    const allPins = s.units.flatMap(u => u.pins);
-    const ys = s.units.flatMap(u => [...u.pins.map(p => p.at.y), ...u.graphics.flatMap(g => g.type === 'rect' ? [g.a.y, g.b.y] : g.type === 'poly' ? g.pts.map(p => p.y) : [])]);
-    const top = ys.length ? Math.max(...ys) : 0, bot = ys.length ? Math.min(...ys) : 0;
-    const prop = (k: string, v: string, y: number, hide = false): W => ['property', q(k), q(v), ['at', 0, y, 0], effects({ size: 1.27, hidden: hide })];
-    const e: W = ['symbol', q(name)];
-    if (s.power) e.push(['power']);
-    e.push(['pin_names', ['offset', 0.508]], ['exclude_from_sim', 'no'], ['in_bom', s.power ? 'no' : 'yes'], ['on_board', s.power ? 'no' : 'yes']);
-    e.push(prop('Reference', s.reference || 'U', top + 2.54, !!s.power));
-    e.push(prop('Value', s.value ?? s.name, bot - 2.54));
-    e.push(prop('Footprint', s.footprint ?? '', bot - 5.08, true));
-    e.push(prop('Datasheet', s.datasheet ?? '', bot - 7.62, true));
-    e.push(prop('Description', s.description ?? '', bot - 10.16, true));
-    for (const [k, v] of Object.entries(s.properties)) if (k && !/^(Reference|Value|Footprint|Datasheet|Description)$/.test(k)) e.push(prop(k, v, 0, true));
-    s.units.forEach((u, i) => {
-      const body: W = ['symbol', q(`${name}_${i + 1}_1`)];
-      for (const g of u.graphics) { const x = symGraphic(g); if (x) body.push(x); }
-      for (const p of u.pins) body.push(pinSExpr(p));
-      e.push(body);
-    });
-    lib.push(e);
+    lib.push(symbolSExpr(s, name));
     r.ok('symbol');
-    r.ok('pin', allPins.length);
+    r.ok('pin', s.units.flatMap(u => u.pins).length);
   }
   return writeSExpr(lib) + '\n';
 }

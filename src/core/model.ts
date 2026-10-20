@@ -123,9 +123,55 @@ export interface Board {
 
 export interface Library { symbols: Symbol[]; footprints: Footprint[] }
 
+// ---------------------------------------------------------------- schematics
+// Sheets use millimetres with Y DOWN (like KiCad schematics). Symbol definitions keep their own Y-up frame;
+// an instance places one unit of a definition: world = at + rotate(mirror(flipY(local)), rotation).
+
+export interface SymbolInstance {
+  ref: string; value: string; footprint?: string;
+  /** Key into Schematic.symbols */
+  lib: string;
+  /** 1-based unit of the definition */
+  unit: number;
+  at: Pt;
+  /** 0, 90, 180 or 270, counter-clockwise on screen */
+  rotation: number;
+  /** 'x' flips top/bottom, 'y' flips left/right; applied before the rotation */
+  mirror?: 'x' | 'y';
+  /** Reference/value label positions in sheet coordinates, when known */
+  refText?: Text; valueText?: Text;
+  properties: Record<string, string>;
+}
+export interface Wire { a: Pt; b: Pt }
+export interface NetLabel {
+  text: string; at: Pt; rotation: number;
+  /** local: same sheet; global: whole design; hier: hierarchical sheet port (treated as global when sheets are flattened) */
+  kind: 'local' | 'global' | 'hier';
+}
+export interface Sheet {
+  name: string;
+  symbols: SymbolInstance[];
+  wires: Wire[];
+  buses: Wire[];
+  junctions: Pt[];
+  noConnects: Pt[];
+  labels: NetLabel[];
+  /** free text and drawings (notes) */
+  graphics: Graphic[];
+  /** file names of child sheets (reader bookkeeping) */
+  subsheets?: string[];
+}
+export interface Schematic {
+  name: string;
+  /** Symbol definitions used by the sheets, by key. Power symbols (Symbol.power) name a global net by their value. */
+  symbols: Record<string, Symbol>;
+  sheets: Sheet[];
+}
+
 export type Design =
   | { kind: 'library'; name: string; library: Library }
-  | { kind: 'board'; name: string; board: Board };
+  | { kind: 'board'; name: string; board: Board }
+  | { kind: 'schematic'; name: string; schematic: Schematic };
 
 export interface InputFile { name: string; data: Uint8Array | string }
 export interface OutputFile { name: string; data: string | Uint8Array }

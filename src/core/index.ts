@@ -9,6 +9,10 @@ import { readEasyEda } from './easyeda/read';
 import { readCfb } from './altium/cfb';
 import { readAltiumPcbDoc, readAltiumPcbLib } from './altium/pcb';
 import { readAltiumSchLib } from './altium/sch';
+import { readKicadSchematic, writeKicadSchematic } from './kicad/sch';
+import { readEagleSchematic, writeEagleSchematic } from './eagle/sch';
+import { readAltiumSchDoc } from './altium/schdoc';
+import { readEasySchematic, writeEasySchematic } from './easyeda/sch';
 import { writeEasyFootprint, writeEasySymbol, writeEasyBoard } from './easyeda/write';
 
 export * from './model';
@@ -45,7 +49,7 @@ export function readFile(f: InputFile): ReadResult[] {
     if (streams.has('Board6/Data')) return [{ file: f.name, format: 'altium', design: { kind: 'board', name, board: readAltiumPcbDoc(bytes, r, name) }, report: r }];
     if (/PCB [\d.]+ Binary Library/i.test(header)) return lib(readAltiumPcbLib(bytes, r));
     if (/Schematic Library/i.test(header)) return lib({ symbols: readAltiumSchLib(bytes, r), footprints: [] });
-    if (/Schematic/i.test(header)) throw new UnsupportedError('Altium schematics (.SchDoc) are not supported yet — boards (.PcbDoc) and libraries (.PcbLib, .SchLib) are.');
+    if (/Schematic/i.test(header)) return [{ file: f.name, format: 'altium', design: { kind: 'schematic', name, schematic: readAltiumSchDoc(bytes, r, name) }, report: r }];
     throw new UnsupportedError(`${f.name} is an OLE file but not a supported Altium document`);
   }
   if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
@@ -56,11 +60,19 @@ export function readFile(f: InputFile): ReadResult[] {
     const r = new Report();
     const kicadLib: Library = { symbols: [], footprints: [] };
     let libName = '';
+    const schFiles: { name: string; src: string }[] = [];
     for (const [name, data] of Object.entries(entries)) {
       if (name.endsWith('/') || name.startsWith('__MACOSX')) continue;
       if (/\.kicad_mod$/i.test(name)) { kicadLib.footprints.push(readKicadFootprint(text(data), r)); continue; }
       if (/\.kicad_sym$/i.test(name)) { kicadLib.symbols.push(...readKicadSymbols(text(data), r)); libName ||= base(name); continue; }
+      if (/\.kicad_sch$/i.test(name)) { schFiles.push({ name, src: text(data) }); continue; }
       try { out.push(...readFile({ name, data })); } catch (e) { if (!(e instanceof UnsupportedError)) throw e; }
+    }
+    if (schFiles.length) {
+      // all sheets of one design: the root (the sheet that references others, else the shortest name) first
+      schFiles.sort((a, b) => Number(/\(sheet\s/.test(b.src)) - Number(/\(sheet\s/.test(a.src)) || a.name.length - b.name.length);
+      const rs = new Report();
+      out.push({ file: f.name, format: 'kicad', design: { kind: 'schematic', name: base(schFiles[0].name), schematic: readKicadSchematic(schFiles, rs, base(schFiles[0].name)) }, report: rs });
     }
     if (kicadLib.symbols.length || kicadLib.footprints.length) {
       out.unshift({ file: f.name, format: 'kicad', design: { kind: 'library', name: libName || base(f.name), library: kicadLib }, report: r });
@@ -78,14 +90,14 @@ export function readFile(f: InputFile): ReadResult[] {
     if (head === 'footprint' || head === 'module') return one('kicad', { kind: 'library', name, library: { symbols: [], footprints: [readKicadFootprint(src, r)] } });
     if (head === 'kicad_symbol_lib') return one('kicad', { kind: 'library', name, library: { symbols: readKicadSymbols(src, r), footprints: [] } });
     if (head === 'kicad_pcb') return one('kicad', { kind: 'board', name, board: readKicadPcb(src, r, name) });
-    if (head === 'kicad_sch') throw new UnsupportedError('KiCad schematics (.kicad_sch) are not supported yet — libraries and boards are.');
+    if (head === 'kicad_sch') return one('kicad', { kind: 'schematic', name, schematic: readKicadSchematic([{ name: f.name, src }], r, name) });
     throw new UnsupportedError(`Unknown KiCad file (${head})`);
   }
   if (trimmed.startsWith('<')) {
     if (!/<eagle[\s>]/.test(src.slice(0, 4000))) throw new UnsupportedError('XML file is not an Eagle file');
     if (/<library[\s>]/.test(src) && !/<board[\s>]/.test(src) && !/<schematic[\s>]/.test(src)) return one('eagle', { kind: 'library', name, library: readEagleLbr(src, r, name) });
     if (/<board[\s>]/.test(src)) return one('eagle', { kind: 'board', name, board: readEagleBoard(src, r, name) });
-    if (/<schematic[\s>]/.test(src)) throw new UnsupportedError('Eagle schematics (.sch) are not supported yet — libraries (.lbr) and boards (.brd) are.');
+    if (/<schematic[\s>]/.test(src)) return one('eagle', { kind: 'schematic', name, schematic: readEagleSchematic(src, r, name) });
     throw new UnsupportedError('Unrecognised Eagle file');
   }
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
@@ -95,6 +107,10 @@ export function readFile(f: InputFile): ReadResult[] {
       // an array of EasyEDA documents (e.g. saved API responses)
       return json.flatMap((j, i) => readFile({ name: `${name}_${i + 1}.json`, data: JSON.stringify(j) }));
     }
+    // EasyEDA schematics: a sheet document (docType 1), or a project export with a list of sheets
+    const j = json as { head?: { docType?: string }; schematics?: { dataStr?: unknown }[] };
+    if (String(j.head?.docType) === '1') return one('easyeda', { kind: 'schematic', name, schematic: readEasySchematic([json as never], r, name) });
+    if (Array.isArray(j.schematics)) return one('easyeda', { kind: 'schematic', name, schematic: readEasySchematic(j.schematics.map(x => (typeof x.dataStr === 'string' ? JSON.parse(x.dataStr) : x.dataStr ?? x)) as never, r, name) });
     const res = readEasyEda(json, r, name);
     return one('easyeda', res.kind === 'board' ? { kind: 'board', name, board: res.board } : { kind: 'library', name, library: res.library });
   }
@@ -106,6 +122,11 @@ export function readFile(f: InputFile): ReadResult[] {
 /** Write a design in the target format. */
 export function writeDesign(d: Design, target: Target, r = new Report()): OutputFile[] {
   const name = kicadName(d.name);
+  if (d.kind === 'schematic') {
+    if (target === 'kicad') return writeKicadSchematic(d.schematic, r);
+    if (target === 'eagle') return [{ name: `${name}.sch`, data: writeEagleSchematic(d.schematic, r) }];
+    return writeEasySchematic({ ...d.schematic, name }, r);
+  }
   if (d.kind === 'board') {
     if (target === 'kicad') return [{ name: `${name}.kicad_pcb`, data: writeKicadPcb(d.board, r) }];
     if (target === 'eagle') return [{ name: `${name}.brd`, data: writeEagleBoard(d.board, r) }];

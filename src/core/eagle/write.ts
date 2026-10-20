@@ -5,18 +5,18 @@ import { Report } from '../report';
 import { EAGLE_LAYERS, kicadLayerToEagle } from './layers';
 
 const up = (p: Pt): Pt => ({ x: p.x, y: -p.y });
-const nm = (s: string) => s.replace(/\s+/g, '_').replace(/[^\x21-\x7e]/g, '_') || 'X';
+export const nm = (s: string) => s.replace(/[\s:]+/g, '_').replace(/[^\x21-\x7e]/g, '_') || 'X';
 
-function header(): string {
+export function header(): string {
   return '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE eagle SYSTEM "eagle.dtd">\n<eagle version="9.6.2">\n<drawing>\n' +
     '<settings>\n<setting alwaysvectorfont="no"/>\n<setting verticaltext="up"/>\n</settings>\n' +
     '<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>\n' +
     el('layers', {}, EAGLE_LAYERS.map(([n, name, color, fill]) => el('layer', { number: n, name, color, fill, visible: 'yes', active: 'yes' })));
 }
-const footer = '</drawing>\n</eagle>\n';
+export const footer = '</drawing>\n</eagle>\n';
 
 /** Graphics in Y-down mm -> Eagle primitives (Y-up). `layerOf` chooses the Eagle layer. */
-function prims(gs: Graphic[], layerOf: (g: Graphic) => number, r: Report, yDown = true): string[] {
+export function prims(gs: Graphic[], layerOf: (g: Graphic) => number, r: Report, yDown = true): string[] {
   const P = (p: Pt) => (yDown ? up(p) : p);
   const out: string[] = [];
   for (const g of gs) {
@@ -32,7 +32,8 @@ function prims(gs: Graphic[], layerOf: (g: Graphic) => number, r: Report, yDown 
       case 'circle': { const c = P(g.center); out.push(el('circle', { x: c.x, y: c.y, radius: g.radius, width: g.fill ? 0 : g.width, layer })); break; }
       case 'rect': {
         const a = P(g.a), b = P(g.b);
-        if (g.fill) out.push(el('rectangle', { x1: Math.min(a.x, b.x), y1: Math.min(a.y, b.y), x2: Math.max(a.x, b.x), y2: Math.max(a.y, b.y), layer }));
+        // symbol bodies are outlines in Eagle (its rectangles are always solid)
+        if (g.fill && layer !== 94) out.push(el('rectangle', { x1: Math.min(a.x, b.x), y1: Math.min(a.y, b.y), x2: Math.max(a.x, b.x), y2: Math.max(a.y, b.y), layer }));
         else { const c = [a, { x: b.x, y: a.y }, b, { x: a.x, y: b.y }]; c.forEach((p, i) => { const q = c[(i + 1) % 4]; out.push(el('wire', { x1: p.x, y1: p.y, x2: q.x, y2: q.y, width: g.width, layer })); }); }
         break;
       }
@@ -51,7 +52,7 @@ function prims(gs: Graphic[], layerOf: (g: Graphic) => number, r: Report, yDown 
   return out;
 }
 
-function textEl(t: Text, layer: number, yDown = true, content?: string): string {
+export function textEl(t: Text, layer: number, yDown = true, content?: string): string {
   // our anchor is the vertical centre; Eagle's default is bottom-left, so use an explicit centre-left align.
   const p = yDown ? up(t.at) : t.at;
   const align = t.justify === 'right' ? 'center-right' : t.justify === 'left' ? 'center-left' : 'center';
@@ -122,19 +123,20 @@ function lengthName(l: number, r: Report) {
 }
 
 /** A symbol unit -> Eagle <symbol>, plus pin-name -> pad numbers (for <connect>). */
-function symbolXml(u: { graphics: Graphic[]; pins: Pin[] }, name: string, r: Report): { xml: string; connects: [string, string[]][] } {
+function symbolXml(u: { graphics: Graphic[]; pins: Pin[] }, name: string, r: Report): { xml: string; connects: [string, string[]][]; pinNames: Map<Pin, string> } {
   const parts = prims(u.graphics, () => 94, r, false);
   // Eagle pins are identified by name: group stacked pins (same name & position) and make other duplicates unique.
-  const groups = new Map<string, { pin: Pin; numbers: string[] }>();
+  const groups = new Map<string, { pin: Pin; numbers: string[]; members: Pin[] }>();
   for (const p of u.pins) {
     const key = `${p.name}|${p.at.x}|${p.at.y}`;
     const g = groups.get(key);
-    if (g) g.numbers.push(p.number); else groups.set(key, { pin: p, numbers: [p.number] });
+    if (g) { g.numbers.push(p.number); g.members.push(p); } else groups.set(key, { pin: p, numbers: [p.number], members: [p] });
   }
+  const pinNames = new Map<Pin, string>();
   const used = new Set<string>();
   const connects: [string, string[]][] = [];
   let i = 0;
-  for (const { pin, numbers } of groups.values()) {
+  for (const { pin, numbers, members } of groups.values()) {
     const base = nm(pin.name && pin.name !== '~' ? pin.name : pin.number || `P${++i}`);
     let pn = base;
     if (used.has(pn)) { let k = 2; while (used.has(`${base}@${k}`)) k++; pn = `${base}@${k}`; }
@@ -143,16 +145,18 @@ function symbolXml(u: { graphics: Graphic[]; pins: Pin[] }, name: string, r: Rep
     const fn = pin.shape === 'inverted' ? 'dot' : pin.shape === 'clock' ? 'clk' : pin.shape === 'inverted_clock' ? 'dotclk' : undefined;
     parts.push(el('pin', { name: pn, x: pin.at.x, y: pin.at.y, visible: vis === 'both' ? undefined : vis, length: lengthName(pin.length, r), direction: DIR[pin.type] ?? 'io', function: fn, rot: `R${fmt(normAngle(Math.round(pin.angle / 90) * 90))}` }));
     connects.push([pn, numbers.filter(Boolean)]);
+    for (const m of members) pinNames.set(m, pn);
   }
   const ys = u.pins.map(p => p.at.y).concat(u.graphics.flatMap(g => g.type === 'rect' ? [g.a.y, g.b.y] : g.type === 'poly' ? g.pts.map(p => p.y) : []));
   const xs = u.pins.map(p => p.at.x).concat(u.graphics.flatMap(g => g.type === 'rect' ? [g.a.x, g.b.x] : []));
   const top = ys.length ? Math.max(...ys) : 2.54, bot = ys.length ? Math.min(...ys) : -2.54, left = xs.length ? Math.min(...xs) : 0;
   parts.push(el('text', { x: left, y: fmt(top + 1.27), size: 1.778, layer: 95 }, [], '>NAME'));
   parts.push(el('text', { x: left, y: fmt(bot - 3.048), size: 1.778, layer: 96 }, [], '>VALUE'));
-  return { xml: el('symbol', { name }, parts), connects };
+  return { xml: el('symbol', { name }, parts), connects, pinNames };
 }
 
-function libraryXml(lib: Library, r: Report, libName: string): { xml: string; pkgNames: Map<Footprint, string> } {
+export interface EagleSymInfo { set: string; gates: string[]; pinNames: Map<Pin, string> }
+export function libraryXml(lib: Library, r: Report, libName: string): { xml: string; pkgNames: Map<Footprint, string>; symInfo: Map<object, EagleSymInfo> } {
   const pkgUsed = new Set<string>();
   const pkgs: string[] = [];
   const pkgNames = new Map<Footprint, string>();
@@ -166,18 +170,27 @@ function libraryXml(lib: Library, r: Report, libName: string): { xml: string; pk
   const syms: string[] = [];
   const sets: string[] = [];
   const symUsed = new Set<string>(), setUsed = new Set<string>();
+  const symInfo = new Map<object, EagleSymInfo>();
   for (const s of lib.symbols) {
     const setName = uniqueName(nm(s.name), setUsed);
+    const info: EagleSymInfo = { set: setName, gates: [], pinNames: new Map() };
+    symInfo.set(s, info);
     const gates: string[] = [];
     const connects: string[] = [];
     const fpName = s.footprint?.replace(/^.*:/, '');
     const fp = lib.footprints.find(f => f.name === fpName) ?? (lib.footprints.length === 1 && lib.symbols.length === 1 ? lib.footprints[0] : undefined);
     const padMap = fp ? padMaps.get(fp.name) : undefined;
-    s.units.forEach((u, i) => {
+    // a pad can be connected only once in Eagle: pins shared by every unit (hidden power pins) stay on the first gate
+    const seenNums = new Set<string>();
+    s.units.forEach((u0, i) => {
+      const u = { ...u0, pins: u0.pins.filter(p => !(p.number && seenNums.has(p.number) && p.hidden)) };
+      for (const p of u.pins) if (p.number) seenNums.add(p.number);
       const symName = uniqueName(nm(s.units.length > 1 ? `${s.name}_${u.name ?? String.fromCharCode(65 + i)}` : s.name), symUsed);
-      const { xml, connects: cs } = symbolXml(u, symName, r);
+      const { xml, connects: cs, pinNames } = symbolXml(u, symName, r);
+      for (const [k, v] of pinNames) info.pinNames.set(k, v);
       syms.push(xml);
       const gate = s.units.length > 1 ? (u.name && !/^\d+$/.test(u.name) ? nm(u.name) : String.fromCharCode(65 + i)) : 'G$1';
+      info.gates.push(gate);
       gates.push(el('gate', { name: gate, symbol: symName, x: fmt(i * 25.4), y: 0, addlevel: s.power ? 'request' : undefined }));
       if (padMap) for (const [pin, nums] of cs) {
         const pads = nums.flatMap(nn => padMap.get(nn) ?? []);
@@ -199,7 +212,7 @@ function libraryXml(lib: Library, r: Report, libName: string): { xml: string; pk
   }
   return {
     xml: el('library', { name: libName }, [el('description', {}, [], `Converted with eda-format-converter`), el('packages', {}, pkgs), el('symbols', {}, syms), el('devicesets', {}, sets)]),
-    pkgNames,
+    pkgNames, symInfo,
   };
 }
 

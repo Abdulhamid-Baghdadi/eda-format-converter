@@ -189,7 +189,7 @@ function makePin(p: XNode, number: string, hidden: boolean): Pin {
 /** Symbol-side layers become a pseudo layer; KiCad symbols do not have layers. */
 const symLayer = (n: string) => (['94', '95', '96', '97', '98', '99'].includes(n) || +n >= 90 ? 'symbol' : eagleLayerToKicad(n));
 
-export function readEagleLibrary(libNode: XNode, ctx: Ctx, libName: string): Library {
+export function readEagleLibrary(libNode: XNode, ctx: Ctx, libName: string, index?: Map<string, Symbol>): Library {
   const lib: Library = { symbols: [], footprints: [] };
   const pkgs = new Map<string, Footprint>();
   for (const p of children(child(libNode, 'packages'), 'package')) {
@@ -237,11 +237,17 @@ export function readEagleLibrary(libNode: XNode, ctx: Ctx, libName: string): Lib
         power: !dev.attrs.package && gates.length === 1 && units[0]?.pins.length === 1 && /^(sup|pwr)$/.test(syms.get(gates[0].attrs.symbol)?.children.find(c => c.tag === 'pin')?.attrs.direction ?? ''),
       };
       if (s.power) s.reference = '#PWR';
+      index?.set(`${ds.attrs.name}|${dev.attrs.name ?? ''}`, s);
       lib.symbols.push(s);
       ctx.r.ok('symbol');
     }
   }
   return lib;
+}
+
+/** Library reader for schematics: fills `index` with (deviceset, device) -> symbol. */
+export function readEagleLibraryNode(libNode: XNode, r: Report, name: string, index: Map<string, Symbol>): Library {
+  return readEagleLibrary(libNode, { r, layer: eagleLayerToKicad, design: DEFAULT_RULES }, name, index);
 }
 
 export function readEagleLbr(src: string, r = new Report(), name = 'eagle'): Library {

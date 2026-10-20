@@ -25,8 +25,8 @@ describe('format detection', () => {
     expect(r[0].design.kind).toBe(kind);
   });
   it('explains unsupported inputs', () => {
-    expect(() => readFile({ name: 'x.kicad_sch', data: '(kicad_sch (version 1))' })).toThrow(/schematics/);
-    expect(() => readFile({ name: 'x.sch', data: '<?xml version="1.0"?><eagle><drawing><schematic/></drawing></eagle>' })).toThrow(UnsupportedError);
+    expect(() => readFile({ name: 'x.epro', data: new Uint8Array([0x50, 0x4b, 3, 4, 0, 0]) })).toThrow(/EasyEDA Pro/);
+    expect(() => readFile({ name: 'x.sch', data: '<?xml version="1.0"?><notEagle/>' })).toThrow(UnsupportedError);
     expect(() => readFile({ name: 'x.txt', data: 'hello' })).toThrow(/recognise/);
   });
 });

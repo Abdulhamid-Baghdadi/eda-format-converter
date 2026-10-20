@@ -1,6 +1,7 @@
 /** SVG preview renderer for the neutral model (footprints, symbols, boards). */
-import type { Board, Footprint, Graphic, Pad, Pt, Symbol, SymbolUnit, Text } from '../core/model';
-import { arcSweep, footprintBBox, graphicPts, rotDown, add, bboxOfPts } from '../core/geom';
+import type { Board, Footprint, Graphic, Pad, Pt, Schematic, Symbol, SymbolUnit, Text } from '../core/model';
+import { placeSym, junctionPoints } from '../core/sch';
+import { arcSweep, footprintBBox, graphicPts, rotDown, rotUp, add, bboxOfPts, normAngle } from '../core/geom';
 
 export type LayerGroup = 'F.Cu' | 'B.Cu' | 'In.Cu' | 'F.SilkS' | 'B.SilkS' | 'F.Fab' | 'B.Fab' | 'Mask' | 'CrtYd' | 'Edge.Cuts' | 'Other';
 export const LAYER_GROUPS: { id: LayerGroup; label: string; color: string }[] = [
@@ -183,3 +184,66 @@ export function renderBoard(b: Board, show: (g: LayerGroup) => boolean): View {
 
 /** Footprints placed on a board, for the board's "footprint" view. */
 export function footprintWorld(fp: { at: Pt; rotation: number }, p: Pt) { return add(fp.at, rotDown(p, fp.rotation)); }
+
+// ---------------------------------------------------------------- schematics
+const WIRE = 'var(--sch-wire)', BUS = 'var(--sch-bus)', LABEL = 'var(--sch-label)';
+
+/** One sheet: placed symbols, wires, buses, junctions, labels, no-connects and notes (sheet coordinates, Y down). */
+export function renderSchematic(s: Schematic, sheetIdx: number): View {
+  const sh = s.sheets[sheetIdx];
+  if (!sh) return { svg: '', box: { x: 0, y: 0, w: 10, h: 10 } };
+  const pts: Pt[] = [];
+  let out = '';
+  for (const inst of sh.symbols) {
+    const def = s.symbols[inst.lib];
+    const u = def?.units[inst.unit - 1] ?? def?.units[0];
+    if (!u) continue;
+    const W = (p: Pt) => placeSym(inst, p);
+    for (const g of u.graphics) {
+      const m: Graphic = g.type === 'line' ? { ...g, a: W(g.a), b: W(g.b) } : g.type === 'arc' ? { ...g, start: W(g.start), mid: W(g.mid), end: W(g.end) }
+        : g.type === 'circle' ? { ...g, center: W(g.center) } : g.type === 'rect' ? { type: 'poly', pts: [g.a, { x: g.b.x, y: g.a.y }, g.b, { x: g.a.x, y: g.b.y }].map(W), width: g.width, layer: g.layer, fill: g.fill, closed: true }
+        : g.type === 'poly' ? { ...g, pts: g.pts.map(W) } : { ...g, at: W(g.at), rotation: normAngle(g.rotation + inst.rotation) };
+      out += graphicSvg(m, g.type === 'text' ? SYMTEXT : BODY, false, { fillColor: BODYFILL });
+      pts.push(...graphicPts(m));
+    }
+    for (const pin of u.pins) {
+      const a = W(pin.at);
+      const dir = rotUp({ x: 1, y: 0 }, pin.angle);
+      const b = W({ x: pin.at.x + dir.x * pin.length, y: pin.at.y + dir.y * pin.length });
+      pts.push(a);
+      if (pin.hidden || def?.power) continue;
+      out += `<line x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}" stroke="${PIN}" stroke-width="0.15"/>`;
+      const horiz = Math.abs(b.y - a.y) < 1e-6;
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      if (pin.number && pin.length > 0.5) out += `<text transform="translate(${f(mid.x + (horiz ? 0 : -0.3))} ${f(mid.y + (horiz ? -0.3 : 0))}) rotate(${horiz ? 0 : -90})" font-size="0.9" text-anchor="middle" fill="${PIN}" class="t">${esc(pin.number)}</text>`;
+      if (pin.name && pin.name !== '~' && pin.name !== pin.number) {
+        const d = { x: b.x - a.x, y: b.y - a.y }, l = Math.hypot(d.x, d.y) || 1;
+        const at = { x: b.x + (d.x / l) * 0.5, y: b.y + (d.y / l) * 0.5 };
+        const anchor = horiz ? (d.x > 0 ? 'start' : 'end') : (d.y < 0 ? 'start' : 'end');
+        out += `<text transform="translate(${f(at.x)} ${f(at.y)}) rotate(${horiz ? 0 : -90})" font-size="1" text-anchor="${anchor}" dominant-baseline="central" fill="${SYMTEXT}" class="t">${esc(pin.name.replace(/~\{([^}]*)\}/g, '$1'))}</text>`;
+      }
+    }
+    // reference and value
+    const lbl = (t: Text | undefined, text: string, dy: number) => {
+      if (t?.hidden || !text) return;
+      const at = t?.at ?? { x: inst.at.x, y: inst.at.y + dy };
+      out += `<text x="${f(at.x)}" y="${f(at.y)}" font-size="${f(Math.min(t?.size || 1.27, 2.5))}" fill="${def?.power ? LABEL : SYMTEXT}" class="t" dominant-baseline="central">${esc(text)}</text>`;
+    };
+    if (!def?.power) lbl(inst.refText, inst.ref, -3);
+    lbl(inst.valueText, inst.value, 3);
+  }
+  for (const w of sh.wires) { out += `<line x1="${f(w.a.x)}" y1="${f(w.a.y)}" x2="${f(w.b.x)}" y2="${f(w.b.y)}" stroke="${WIRE}" stroke-width="0.18" stroke-linecap="round"/>`; pts.push(w.a, w.b); }
+  for (const w of sh.buses) { out += `<line x1="${f(w.a.x)}" y1="${f(w.a.y)}" x2="${f(w.b.x)}" y2="${f(w.b.y)}" stroke="${BUS}" stroke-width="0.45" stroke-linecap="round"/>`; pts.push(w.a, w.b); }
+  for (const j of junctionPoints(sh)) out += `<circle cx="${f(j.x)}" cy="${f(j.y)}" r="0.45" fill="${WIRE}"/>`;
+  for (const n of sh.noConnects) out += `<path d="M${f(n.x - 0.6)} ${f(n.y - 0.6)}L${f(n.x + 0.6)} ${f(n.y + 0.6)}M${f(n.x + 0.6)} ${f(n.y - 0.6)}L${f(n.x - 0.6)} ${f(n.y + 0.6)}" stroke="#2563eb" stroke-width="0.15"/>`;
+  for (const l of sh.labels) {
+    const rot = -normAngle(Math.round(l.rotation / 90) * 90);
+    const flip = rot <= -90 && rot > -270;
+    const tag = l.kind === 'local' ? '' : `<rect x="${flip ? -l.text.length * 0.75 - 0.6 : -0.2}" y="-0.8" width="${l.text.length * 0.75 + 0.8}" height="1.6" rx="0.3" fill="none" stroke="${LABEL}" stroke-width="0.1"/>`;
+    out += `<g transform="translate(${f(l.at.x)} ${f(l.at.y)}) rotate(${flip ? rot + 180 : rot})">${tag}<text x="${flip ? -0.4 : 0.2}" y="${l.kind === 'local' ? -0.35 : 0}" font-size="1.2" text-anchor="${flip ? 'end' : 'start'}" dominant-baseline="${l.kind === 'local' ? 'auto' : 'central'}" fill="${LABEL}" class="t">${esc(l.text)}</text></g>`;
+    pts.push(l.at);
+  }
+  for (const g of sh.graphics) { out += graphicSvg(g, SYMTEXT); pts.push(...graphicPts(g)); }
+  if (!pts.length) pts.push({ x: 0, y: 0 }, { x: 50, y: 50 });
+  return { svg: out, box: pad(bboxOfPts(pts), 0.04) };
+}

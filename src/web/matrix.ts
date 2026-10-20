@@ -15,11 +15,14 @@ export const MATRIX: { item: string; kicad: string; eagle: string; easyeda: stri
   { item: 'Copper zones / keepouts', kicad: '✅ (refill after opening)', eagle: '✅ polygons / restrict', easyeda: '✅ copper areas / cutouts' },
   { item: 'Board outline, holes, text', kicad: '✅', eagle: '✅', easyeda: '✅' },
   { item: 'Copper layers', kicad: '✅ up to 32', eagle: '✅ up to 16', easyeda: '✅ up to 34' },
-  { item: 'Schematics', kicad: '🛠 planned', eagle: '🛠 planned', easyeda: '🛠 planned' },
+  { item: 'Schematics: symbols, wires, junctions, labels', kicad: '✅', eagle: '✅ (no-connects dropped)', easyeda: '✅' },
+  { item: 'Power symbols', kicad: '✅', eagle: '✅ supply symbols', easyeda: '✅ net flags (no PWR_FLAG)' },
+  { item: 'Multi-sheet / hierarchical schematics', kicad: '✅ flattened, hierarchical → global labels', eagle: '✅ sheets', easyeda: '✅ one file per sheet' },
+  { item: 'Schematic pin numbers', kicad: '✅', eagle: '⚠️ on a placeholder package', easyeda: '✅' },
   { item: 'Design rules, net classes, dimensions, images', kicad: '❌', eagle: '❌', easyeda: '❌' },
 ];
 /** What the Altium reader takes in (Altium is input-only). */
-export const ALTIUM_IN = 'Altium Designer / CircuitMaker binary files are read (not written): .PcbDoc boards (components, pads incl. slots and rounded rects, tracks, arcs, vias, nets, polygon pours, copper regions and fills, cutouts, board outline, text), .PcbLib footprints and .SchLib symbols (multi-part, binary pins, footprint link). Mechanical layers go to Dwgs.User; 3D bodies, rules and dimensions are dropped.';
+export const ALTIUM_IN = 'Altium Designer / CircuitMaker binary files are read (not written): .SchDoc schematics (components, wires, net labels, power ports, ports, junctions), .PcbDoc boards (components, pads incl. slots and rounded rects, tracks, arcs, vias, nets, polygon pours, copper regions and fills, cutouts, board outline, text), .PcbLib footprints and .SchLib symbols (multi-part, binary pins, footprint link). Mechanical layers go to Dwgs.User; 3D bodies, rules and dimensions are dropped.';
 export const FORMAT_NOTES: Record<string, string> = {
   kicad: 'KiCad 8 format (opens in KiCad 8, 9, 10)',
   eagle: 'Eagle 9 XML (Eagle 6+, Fusion Electronics, and KiCad’s importer)',

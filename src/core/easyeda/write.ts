@@ -1,4 +1,4 @@
-import type { Board, Footprint, Graphic, Pad, Pin, Pt, Symbol, Text } from '../model';
+import type { Board, Footprint, Graphic, Pad, Pin, Pt, Symbol, SymbolUnit, Text } from '../model';
 import { arcSweep, rotDown, add, normAngle, round, footprintBBox, uniqueName } from '../geom';
 import { Report } from '../report';
 import { U } from './read';
@@ -21,7 +21,7 @@ export const eeLayerId = (l: string) => { const m = /^In(\d+)\.Cu$/.exec(l); ret
 
 const r4 = (v: number) => round(v, 4);
 
-class Ids { private i = 0; next() { return 'gge' + (++this.i); } }
+export class Ids { private i = 0; next() { return 'gge' + (++this.i); } }
 
 /** Converts mm (Y-down) to EasyEDA canvas units around an origin. */
 interface Xf { ox: number; oy: number; ids: Ids; r: Report }
@@ -166,34 +166,40 @@ function pinShape(p: Pin, S: (q: Pt) => number[], ids: Ids): string {
   ].join('^^');
 }
 
+/** Body graphics and pins of one symbol unit as EasyEDA shapes; S maps model (Y-up mm) points to canvas units. */
+export function unitShapes(u: SymbolUnit, S: (p: Pt) => number[], ids: Ids): string[] {
+  const shape: string[] = [];
+  for (const g of u.graphics) {
+    const w = r4(Math.max(g.width, 0.1524) / U);
+    const fill = g.fill ? '#FFFFFF' : 'none';
+    switch (g.type) {
+      case 'rect': { const [x1, y1] = S(g.a), [x2, y2] = S(g.b); shape.push(`R~${Math.min(x1, x2)}~${Math.min(y1, y2)}~~~${r4(Math.abs(x2 - x1))}~${r4(Math.abs(y2 - y1))}~#880000~${w}~0~${fill}~${ids.next()}~0~`); break; }
+      case 'circle': { const [x, y] = S(g.center); const rr = r4(g.radius / U); shape.push(`E~${x}~${y}~${rr}~${rr}~#880000~${w}~0~${fill}~${ids.next()}~0`); break; }
+      case 'line': shape.push(`PL~${S(g.a).join(' ')} ${S(g.b).join(' ')}~#880000~${w}~0~none~${ids.next()}~0`); break;
+      case 'poly': shape.push(`${g.closed ? 'PG' : 'PL'}~${g.pts.map(p => S(p).join(' ')).join(' ')}~#880000~${w}~0~${g.closed ? fill : 'none'}~${ids.next()}~0`); break;
+      case 'arc': {
+        const a = arcSweep(g.start, g.mid, g.end);
+        const [sx, sy] = S(g.start), [ex, ey] = S(g.end);
+        if (!a) { shape.push(`PL~${sx} ${sy} ${ex} ${ey}~#880000~${w}~0~none~${ids.next()}~0`); break; }
+        const rr = r4(a.radius / U);
+        // Y flips, so a CCW (Y-up) sweep becomes clockwise on the EasyEDA canvas: sweep-flag 0
+        shape.push(`A~M ${sx} ${sy} A ${rr} ${rr} 0 ${Math.abs(a.sweep) > 180 ? 1 : 0} ${a.sweep > 0 ? 0 : 1} ${ex} ${ey}~~#880000~${w}~0~none~${ids.next()}~0`);
+        break;
+      }
+      case 'text': { const [x, y] = S(g.at); shape.push(`T~L~${x}~${y}~${normAngle(g.rotation)}~#0000FF~~${r4(g.size / 0.3528 / 0.8)}pt~~~~comment~${g.text}~1~${g.justify === 'left' ? 'start' : g.justify === 'right' ? 'end' : 'middle'}~${ids.next()}~0~`); break; }
+    }
+  }
+  for (const p of u.pins) shape.push(pinShape(p, S, ids));
+  return shape;
+}
+
 export function writeEasySymbol(s: Symbol, r = new Report()): string[] {
   // EasyEDA Standard symbols have one unit per document; multi-unit symbols become one document per unit.
   if (s.units.length > 1) r.approx('multi-unit symbol', 'each unit becomes its own EasyEDA symbol');
   return s.units.map((u, ui) => {
     const ox = 400, oy = 300, ids = new Ids();
     const S = (p: Pt) => [r4(ox + p.x / U), r4(oy - p.y / U)];
-    const shape: string[] = [];
-    for (const g of u.graphics) {
-      const w = r4(Math.max(g.width, 0.1524) / U);
-      const fill = g.fill ? '#FFFFFF' : 'none';
-      switch (g.type) {
-        case 'rect': { const [x1, y1] = S(g.a), [x2, y2] = S(g.b); shape.push(`R~${Math.min(x1, x2)}~${Math.min(y1, y2)}~~~${r4(Math.abs(x2 - x1))}~${r4(Math.abs(y2 - y1))}~#880000~${w}~0~${fill}~${ids.next()}~0~`); break; }
-        case 'circle': { const [x, y] = S(g.center); const rr = r4(g.radius / U); shape.push(`E~${x}~${y}~${rr}~${rr}~#880000~${w}~0~${fill}~${ids.next()}~0`); break; }
-        case 'line': shape.push(`PL~${S(g.a).join(' ')} ${S(g.b).join(' ')}~#880000~${w}~0~none~${ids.next()}~0`); break;
-        case 'poly': shape.push(`${g.closed ? 'PG' : 'PL'}~${g.pts.map(p => S(p).join(' ')).join(' ')}~#880000~${w}~0~${g.closed ? fill : 'none'}~${ids.next()}~0`); break;
-        case 'arc': {
-          const a = arcSweep(g.start, g.mid, g.end);
-          const [sx, sy] = S(g.start), [ex, ey] = S(g.end);
-          if (!a) { shape.push(`PL~${sx} ${sy} ${ex} ${ey}~#880000~${w}~0~none~${ids.next()}~0`); break; }
-          const rr = r4(a.radius / U);
-          // Y flips, so a CCW (Y-up) sweep becomes clockwise on the EasyEDA canvas: sweep-flag 0
-          shape.push(`A~M ${sx} ${sy} A ${rr} ${rr} 0 ${Math.abs(a.sweep) > 180 ? 1 : 0} ${a.sweep > 0 ? 0 : 1} ${ex} ${ey}~~#880000~${w}~0~none~${ids.next()}~0`);
-          break;
-        }
-        case 'text': { const [x, y] = S(g.at); shape.push(`T~L~${x}~${y}~${normAngle(g.rotation)}~#0000FF~~${r4(g.size / 0.3528 / 0.8)}pt~~~~comment~${g.text}~1~${g.justify === 'left' ? 'start' : g.justify === 'right' ? 'end' : 'middle'}~${ids.next()}~0~`); break; }
-      }
-    }
-    for (const p of u.pins) shape.push(pinShape(p, S, ids));
+    const shape = unitShapes(u, S, ids);
     const ys = u.pins.map(p => S(p.at)[1]).concat(u.graphics.flatMap(g => g.type === 'rect' ? [S(g.a)[1], S(g.b)[1]] : []));
     const top = ys.length ? Math.min(...ys) : oy;
     shape.push(`T~P~${ox}~${r4(top - 8)}~0~#000080~Arial~~~~~comment~${s.reference}?~1~start~${ids.next()}~0~pinpart`);

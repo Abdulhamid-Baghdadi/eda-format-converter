@@ -2,7 +2,7 @@ import './style.css';
 import { readFile, writeDesign, zipOutputs, type Format, type Target, type ConvertResult, type ReadResult } from '../core/index';
 import type { Design, Library, OutputFile } from '../core/model';
 import { Report } from '../core/report';
-import { LAYER_GROUPS, renderBoard, renderFootprint, renderSymbol, type LayerGroup, type View } from './render';
+import { LAYER_GROUPS, renderBoard, renderFootprint, renderSymbol, renderSchematic, type LayerGroup, type View } from './render';
 import { MATRIX, FORMAT_NOTES, ALTIUM_IN } from './matrix';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -17,12 +17,16 @@ const state = {
 };
 
 const SAMPLES: { file: string; label: string; from: Format; kind: string }[] = [
+  { file: 'blinky-555.kicad_sch', label: '555 blinker schematic', from: 'kicad', kind: 'KiCad schematic' },
+  { file: 'blinky-555.sch', label: '555 blinker schematic', from: 'eagle', kind: 'Eagle schematic' },
+  { file: 'blinky-555.schematic.json', label: '555 blinker schematic', from: 'easyeda', kind: 'EasyEDA schematic' },
   { file: 'blinky-555.brd', label: '555 blinker board', from: 'eagle', kind: 'Eagle board' },
   { file: 'blinky-555.kicad_pcb', label: '555 blinker board', from: 'kicad', kind: 'KiCad board' },
   { file: 'blinky-555.json', label: '555 blinker board', from: 'easyeda', kind: 'EasyEDA PCB' },
   { file: 'demo-parts.lbr', label: 'Eagle library', from: 'eagle', kind: 'symbols + packages' },
   { file: 'SOT-23-5_regulator.json', label: 'EasyEDA part', from: 'easyeda', kind: 'symbol + footprint' },
   { file: 'demo-parts.zip', label: 'KiCad library', from: 'kicad', kind: '.kicad_sym + .pretty' },
+  { file: 'usb-power-adapter.SchDoc', label: 'USB power adapter', from: 'altium', kind: 'Altium schematic' },
   { file: 'usb-power-adapter.PcbDoc', label: 'USB power adapter', from: 'altium', kind: 'Altium board' },
   { file: 'QFN-24_4x4.PcbLib', label: 'QFN-24 footprint', from: 'altium', kind: 'Altium .PcbLib' },
   { file: 'CM4.SchLib', label: 'Raspberry Pi CM4', from: 'altium', kind: 'Altium .SchLib, 21 units' },
@@ -38,7 +42,10 @@ function convertEntry(e: Entry) {
     e.results = inputs.map(input => {
       const writeReport = new Report();
       const outputs = writeDesign(input.design, state.target, writeReport);
-      const back = outputs.flatMap(o => { try { return readFile({ name: o.name, data: o.data }).map(r => r.design); } catch { return []; } });
+      let back = outputs.flatMap(o => { try { return readFile({ name: o.name, data: o.data }).map(r => r.design); } catch { return []; } });
+      // a schematic written as several files (KiCad sub-sheets, one EasyEDA file per sheet) reads back as one design
+      const schs = back.filter((b): b is Extract<Design, { kind: 'schematic' }> => b.kind === 'schematic');
+      if (schs.length > 1) back = [{ kind: 'schematic', name: schs[0].name, schematic: { name: schs[0].name, symbols: Object.assign({}, ...schs.map(x => x.schematic.symbols)), sheets: schs.flatMap(x => x.schematic.sheets) } }];
       return { input, outputs, writeReport, back };
     });
     e.error = undefined;
@@ -60,10 +67,11 @@ async function addFiles(files: { name: string; data: Uint8Array }[]) {
 }
 
 // ------------------------------------------------------------------ items
-interface Item { kind: 'symbol' | 'footprint' | 'board'; name: string; src: View | null; dst: View | null; units: number }
+interface Item { kind: 'symbol' | 'footprint' | 'board' | 'sheet'; name: string; src: View | null; dst: View | null; units: number }
 function items(r: ConvertResult & { back: Design[] }): { label: string; kind: Item['kind']; idx: number }[] {
   const d = r.input.design;
   if (d.kind === 'board') return [{ label: d.name, kind: 'board', idx: 0 }];
+  if (d.kind === 'schematic') return d.schematic.sheets.map((sh, i) => ({ label: sh.name || `Sheet ${i + 1}`, kind: 'sheet' as const, idx: i }));
   return [...d.library.symbols.map((s, i) => ({ label: s.name, kind: 'symbol' as const, idx: i })), ...d.library.footprints.map((f, i) => ({ label: f.name, kind: 'footprint' as const, idx: i }))];
 }
 const show = (g: LayerGroup) => !state.hidden.has(g);
@@ -73,6 +81,10 @@ function views(r: ConvertResult & { back: Design[] }, it: { kind: Item['kind']; 
   if (it.kind === 'board') {
     const back = r.back.find(b => b.kind === 'board');
     return { src: d.kind === 'board' ? renderBoard(d.board, show) : null, dst: back?.kind === 'board' ? renderBoard(back.board, show) : null, units: 1 };
+  }
+  if (it.kind === 'sheet') {
+    const back = r.back.find(b => b.kind === 'schematic');
+    return { src: d.kind === 'schematic' ? renderSchematic(d.schematic, it.idx) : null, dst: back?.kind === 'schematic' && back.schematic.sheets[it.idx] ? renderSchematic(back.schematic, it.idx) : null, units: 1 };
   }
   const lib = libOf(r.back);
   if (d.kind !== 'library') return { src: null, dst: null, units: 1 };
@@ -143,7 +155,7 @@ function render(keepView = false) {
   // file list
   $('fileList').innerHTML = state.entries.map((e, i) => {
     const rs = e.results ?? [];
-    const kinds = rs.map(r => r.input.design.kind === 'board' ? 'board' : `${r.input.design.library.symbols.length} sym · ${r.input.design.library.footprints.length} fp`).join(', ');
+    const kinds = rs.map(r => { const d = r.input.design; return d.kind === 'board' ? 'board' : d.kind === 'schematic' ? `schematic · ${d.schematic.sheets.length} sheet${d.schematic.sheets.length > 1 ? 's' : ''} · ${d.schematic.sheets.reduce((n, x) => n + x.symbols.length, 0)} symbols` : `${d.library.symbols.length} sym · ${d.library.footprints.length} fp`; }).join(', ');
     const fmt = rs[0]?.input.format;
     const issues = rs.reduce((n, r) => n + r.input.report.total('skipped') + r.writeReport.total('skipped'), 0);
     const approx = rs.reduce((n, r) => n + r.input.report.total('approximated') + r.writeReport.total('approximated'), 0);
@@ -167,7 +179,7 @@ function render(keepView = false) {
   // item selector
   const resultTabs = (e.results!.length > 1) ? `<select id="resultSel">${e.results!.map((x, i) => `<option value="${i}" ${i === state.sel.result ? 'selected' : ''}>${esc(x.input.file)}</option>`).join('')}</select>` : '';
   $('itemBar').innerHTML = resultTabs + (its.length > 1
-    ? `<select id="itemSel" aria-label="Item">${its.map((x, i) => `<option value="${i}" ${i === state.sel.item ? 'selected' : ''}>${x.kind === 'symbol' ? '⏚ symbol' : '▣ footprint'} · ${esc(x.label)}</option>`).join('')}</select><span class="muted small">${its.length} items</span>`
+    ? `<select id="itemSel" aria-label="Item">${its.map((x, i) => `<option value="${i}" ${i === state.sel.item ? 'selected' : ''}>${x.kind === 'symbol' ? '⏚ symbol' : x.kind === 'sheet' ? '▤ sheet' : '▣ footprint'} · ${esc(x.label)}</option>`).join('')}</select><span class="muted small">${its.length} items</span>`
     : `<strong>${esc(it.label)}</strong> <span class="muted small">${it.kind}</span>`);
   // outputs
   const btn = (o: OutputFile, i: number) => `<button class="ghost small dlbtn" data-o="${i}" title="Download ${esc(o.name)}">⭳ ${esc(o.name.split('/').pop()!)}</button>`;
@@ -175,7 +187,7 @@ function render(keepView = false) {
     : `<details class="outlist"><summary class="ghost small">⭳ ${r.outputs.length} output files</summary><div class="outmenu">${r.outputs.map(btn).join('')}</div></details>`;
   // previews
   const v = views(r, it, state.sel.unit);
-  for (const id of ['srcSvg', 'dstSvg']) $(id).classList.toggle('paper', it.kind === 'symbol');
+  for (const id of ['srcSvg', 'dstSvg']) $(id).classList.toggle('paper', it.kind === 'symbol' || it.kind === 'sheet');
   $('srcSvg').innerHTML = v.src?.svg ?? '';
   $('dstSvg').innerHTML = v.dst?.svg ?? '<text x="0" y="0" font-size="1" fill="currentColor">no preview</text>';
   $('srcBadge').textContent = LABEL[r.input.format]; $('srcBadge').className = `badge ${r.input.format}`;
@@ -186,7 +198,7 @@ function render(keepView = false) {
   $('unitPrev').hidden = $('unitNext').hidden = !multi;
   $('unitLabel').textContent = multi ? `unit ${String.fromCharCode(65 + state.sel.unit)} of ${v.units}` : '';
   // layers (not for symbols)
-  $('layers').innerHTML = it.kind === 'symbol' ? '<span class="muted small">Symbol view · scroll to zoom, drag to pan</span>' : LAYER_GROUPS.map(g => `<label class="lyr"><input type="checkbox" data-l="${g.id}" ${state.hidden.has(g.id) ? '' : 'checked'}><span class="sw" style="background:${g.color}"></span>${g.label}</label>`).join('');
+  $('layers').innerHTML = it.kind === 'symbol' || it.kind === 'sheet' ? `<span class="muted small">${it.kind === 'sheet' ? 'Schematic' : 'Symbol'} view · scroll to zoom, drag to pan</span>` : LAYER_GROUPS.map(g => `<label class="lyr"><input type="checkbox" data-l="${g.id}" ${state.hidden.has(g.id) ? '' : 'checked'}><span class="sw" style="background:${g.color}"></span>${g.label}</label>`).join('');
   // report
   const rep = new Report(); rep.merge(r.input.report); rep.merge(r.writeReport);
   const c = rep.total('converted'), a = rep.total('approximated'), s = rep.total('skipped');

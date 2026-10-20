@@ -1,0 +1,1314 @@
+(kicad_sch
+	(version 20231120)
+	(generator "eda_format_converter")
+	(generator_version "1.0")
+	(uuid "71739d06-8671-4726-8aa2-7493bac10e81")
+	(paper "A4")
+	(lib_symbols
+		(symbol "blinky-555:NE555"
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 12.7 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Value" "NE555"
+				(at 0 -12.7 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+				(at 0 -15.24 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -17.78 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" "Precision timer"
+				(at 0 -20.32 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "NE555_1_1"
+				(rectangle (start -7.62 7.62) (end 7.62 -7.62) (stroke (width 0.254) (type default)) (fill (type background)))
+				(pin power_in line
+					(at 0 10.16 270)
+					(length 2.54)
+					(name "VCC"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "8"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin power_in line
+					(at 0 -10.16 90)
+					(length 2.54)
+					(name "GND"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin input line
+					(at -10.16 5.08 0)
+					(length 2.54)
+					(name "R"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "4"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin input line
+					(at -10.16 0 0)
+					(length 2.54)
+					(name "TR"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "2"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin input line
+					(at -10.16 -2.54 0)
+					(length 2.54)
+					(name "THR"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "6"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin input line
+					(at -10.16 -5.08 0)
+					(length 2.54)
+					(name "CV"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "5"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin output line
+					(at 10.16 2.54 180)
+					(length 2.54)
+					(name "Q"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "3"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin open_collector line
+					(at 10.16 -2.54 180)
+					(length 2.54)
+					(name "DIS"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "7"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:R"
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 0 6.35 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Value" "R"
+				(at 0 -6.35 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -8.89 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -11.43 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -13.97 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "R_1_1"
+				(rectangle (start -1.016 2.54) (end 1.016 -2.54) (stroke (width 0.254) (type default)) (fill (type none)))
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "2"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:C"
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0 6.35 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Value" "C"
+				(at 0 -6.35 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -8.89 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -11.43 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -13.97 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "C_1_1"
+				(polyline (pts (xy -2.032 0.508) (xy 2.032 0.508)) (stroke (width 0.508) (type default)) (fill (type none)))
+				(polyline (pts (xy -2.032 -0.508) (xy 2.032 -0.508)) (stroke (width 0.508) (type default)) (fill (type none)))
+				(pin passive line
+					(at 0 3.81 270)
+					(length 3.302)
+					(name "~"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 3.302)
+					(name "~"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "2"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:LED"
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 3.81 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Value" "LED"
+				(at 0 -3.81 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -6.35 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -8.89 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -11.43 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "LED_1_1"
+				(polyline (pts (xy -1.27 -1.27) (xy -1.27 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(polyline (pts (xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(polyline (pts (xy -0.5 1.8) (xy 0.6 2.9)) (stroke (width 0.15) (type default)) (fill (type none)))
+				(polyline (pts (xy 0.4 1.8) (xy 1.5 2.9)) (stroke (width 0.15) (type default)) (fill (type none)))
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "K"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "A"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "2"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:Conn_01x02"
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 3.81 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Value" "Conn_01x02"
+				(at 0 -6.35 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+				(at 0 -8.89 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -11.43 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -13.97 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "Conn_01x02_1_1"
+				(rectangle (start -1.27 1.27) (end 1.27 -3.81) (stroke (width 0.254) (type default)) (fill (type background)))
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "2"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:VCC"
+			(power)
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(property "Reference" "#PWR"
+				(at 0 2.54 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Value" "VCC"
+				(at 0 -2.54 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -5.08 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -7.62 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -10.16 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "VCC_1_1"
+				(polyline (pts (xy 0 0) (xy 0 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(polyline (pts (xy -0.762 1.27) (xy 0.762 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(hide yes)
+					(name "VCC"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:GND"
+			(power)
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(property "Reference" "#PWR"
+				(at 0 2.54 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Value" "GND"
+				(at 0 -5.08 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -7.62 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -10.16 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -12.7 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "GND_1_1"
+				(polyline (pts (xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(hide yes)
+					(name "GND"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+		(symbol "blinky-555:PWR_FLAG"
+			(power)
+			(pin_names (offset 0.508))
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(property "Reference" "#FLG"
+				(at 0 5.08 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Value" "PWR_FLAG"
+				(at 0 -2.54 0)
+				(effects (font (size 1.27 1.27)))
+			)
+			(property "Footprint" ""
+				(at 0 -5.08 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Datasheet" ""
+				(at 0 -7.62 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(property "Description" ""
+				(at 0 -10.16 0)
+				(effects (font (size 1.27 1.27)) (hide yes))
+			)
+			(symbol "PWR_FLAG_1_1"
+				(polyline (pts (xy 0 0) (xy 0 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(polyline (pts (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
+				(pin power_out line
+					(at 0 0 90)
+					(length 0)
+					(name "pwr"
+						(effects (font (size 1.27 1.27)))
+					)
+					(number "1"
+						(effects (font (size 1.27 1.27)))
+					)
+				)
+			)
+		)
+	)
+	(wire (pts (xy 127 78.74) (xy 127 76.2)) (stroke (width 0) (type default)) (uuid "e8402b9a-530f-4f7a-8391-c20f80b12da8"))
+	(wire (pts (xy 127 99.06) (xy 127 101.6)) (stroke (width 0) (type default)) (uuid "e7402a07-90bb-4dd7-8c91-c39248b77edc"))
+	(wire (pts (xy 116.84 83.82) (xy 114.3 83.82)) (stroke (width 0) (type default)) (uuid "e6402874-ce66-4c34-8d91-c1e110bdd010"))
+	(wire (pts (xy 116.84 88.9) (xy 114.3 88.9)) (stroke (width 0) (type default)) (uuid "e54026e1-0c12-4a91-8e91-cf74d8c912fc"))
+	(wire (pts (xy 116.84 91.44) (xy 114.3 91.44)) (stroke (width 0) (type default)) (uuid "e440254e-49bd-48ee-8f91-ccdba0ca7278"))
+	(wire (pts (xy 116.84 93.98) (xy 114.3 93.98)) (stroke (width 0) (type default)) (uuid "e34023bb-8769-474b-8891-ca2e68d5b564"))
+	(wire (pts (xy 137.16 86.36) (xy 139.7 86.36)) (stroke (width 0) (type default)) (uuid "e2402228-c514-45a8-8991-cbbd30d714e0"))
+	(wire (pts (xy 137.16 91.44) (xy 139.7 91.44)) (stroke (width 0) (type default)) (uuid "e1402095-02bf-4405-8a91-c900f8e74984"))
+	(wire (pts (xy 157.48 72.39) (xy 157.48 69.85)) (stroke (width 0) (type default)) (uuid "e0401f02-406b-4262-8b91-f697c0ed9ab8"))
+	(wire (pts (xy 157.48 80.01) (xy 157.48 82.55)) (stroke (width 0) (type default)) (uuid "4704bc9e-615f-473e-8cd5-550b2e687a03"))
+	(wire (pts (xy 157.48 92.71) (xy 157.48 90.17)) (stroke (width 0) (type default)) (uuid "4804be31-23b3-48e1-83d5-57a4666e851b"))
+	(wire (pts (xy 157.48 100.33) (xy 157.48 102.87)) (stroke (width 0) (type default)) (uuid "4504b978-dcb5-43f8-8ed5-50edbe7a0e23"))
+	(wire (pts (xy 168.91 76.2) (xy 166.37 76.2)) (stroke (width 0) (type default)) (uuid "4604bb0b-9f0a-459b-8dd5-529ef6714413"))
+	(wire (pts (xy 176.53 76.2) (xy 179.07 76.2)) (stroke (width 0) (type default)) (uuid "4b04c2ea-6ab1-4dca-80d5-2b7f0e4f3533"))
+	(wire (pts (xy 101.6 105.41) (xy 101.6 102.87)) (stroke (width 0) (type default)) (uuid "4c04c47d-2d05-4f6d-87d5-2de84641796b"))
+	(wire (pts (xy 101.6 113.03) (xy 101.6 115.57)) (stroke (width 0) (type default)) (uuid "4904bfc4-e608-4a84-82d5-56519e6aacc3"))
+	(wire (pts (xy 116.84 110.49) (xy 116.84 107.95)) (stroke (width 0) (type default)) (uuid "4a04c157-a85c-4c27-81d5-28c2d64e1bd3"))
+	(wire (pts (xy 116.84 118.11) (xy 116.84 120.65)) (stroke (width 0) (type default)) (uuid "3f04b006-4eba-4a26-84d5-59936eaeca83"))
+	(wire (pts (xy 88.9 72.39) (xy 88.9 69.85)) (stroke (width 0) (type default)) (uuid "4004b199-110f-4bc9-8bd5-580ca6972b4b"))
+	(wire (pts (xy 88.9 80.01) (xy 88.9 82.55)) (stroke (width 0) (type default)) (uuid "41027495-1dd0-4805-8ad3-9d007b6e0780"))
+	(wire (pts (xy 191.77 76.2) (xy 189.23 76.2)) (stroke (width 0) (type default)) (uuid "40027302-5b7b-4662-8bd3-9a97438d114c"))
+	(wire (pts (xy 199.39 76.2) (xy 201.93 76.2)) (stroke (width 0) (type default)) (uuid "3f02716f-9926-44bf-84d3-98fa0b8e70c8"))
+	(wire (pts (xy 71.12 96.52) (xy 68.58 96.52)) (stroke (width 0) (type default)) (uuid "3e026fdc-d6d2-431c-85d3-8649d380fb1c"))
+	(wire (pts (xy 71.12 99.06) (xy 68.58 99.06)) (stroke (width 0) (type default)) (uuid "3d026e49-147d-4179-86d3-87dc9b9b1330"))
+	(label "THR"
+		(at 114.3 88.9 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "9f6f0f91-904c-4c41-84be-e604cc7420dd")
+	)
+	(label "THR"
+		(at 114.3 91.44 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "9c6f0ad8-494e-4758-87be-e34d247fa9e5")
+	)
+	(label "CTRL"
+		(at 114.3 93.98 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "9d6f0c6b-0ba3-48fb-86be-e5fe5c8d1f91")
+	)
+	(label "OUT"
+		(at 139.7 86.36 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "9a6f07b2-c4a5-4412-81be-ee27b498a899")
+	)
+	(label "DIS"
+		(at 139.7 91.44 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "9b6f0945-86fa-45b5-80be-e0d0eca12c8d")
+	)
+	(label "DIS"
+		(at 157.48 69.85 90)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "0871f373-fa8f-4d83-83a0-1ae624b7f434")
+	)
+	(label "THR"
+		(at 157.48 90.17 90)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "0771f1e0-383b-4be0-8ca0-1875ecaf7040")
+	)
+	(label "DIS"
+		(at 157.48 102.87 270)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "0a71f699-7f38-40c9-81a0-1f0c94c19188")
+	)
+	(label "LED_A"
+		(at 166.37 76.2 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "0971f506-bce4-4f26-82a0-1c935cc7e2bc")
+	)
+	(label "OUT"
+		(at 179.07 76.2 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "0c71f9bf-03e1-440f-87a0-102a048ae884")
+	)
+	(label "THR"
+		(at 101.6 115.57 270)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "0b71f82c-418d-426c-80a0-11b9cc9139b8")
+	)
+	(label "CTRL"
+		(at 116.84 120.65 270)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right bottom))
+		(uuid "0e71fce5-888b-4755-85a0-1570747bcd40")
+	)
+	(label "LED_A"
+		(at 201.93 76.2 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left bottom))
+		(uuid "0d71fb52-c636-45b2-86a0-12c73cae9dec")
+	)
+	(text "555 astable LED blinker — eda-format-converter sample"
+		(exclude_from_sim no)
+		(at 76.2 60.96 0)
+		(effects (font (size 2 2)) (justify left))
+		(uuid "29152663-c009-4573-82c4-cff6e129309c")
+	)
+	(symbol
+		(lib_id "blinky-555:NE555")
+		(at 127 88.9 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9b970c09-1c0e-4339-8046-e59ca6eff917")
+		(property "Reference" "U1"
+			(at 129.54 76.2 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "NE555"
+			(at 129.54 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+			(at 129.54 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 129.54 96.52 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 129.54 99.06 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "8" (uuid "02465df9-b390-4a29-8997-b46ceb0487b0"))
+		(pin "1" (uuid "01465c66-f13c-4886-8a97-b5f3b314bc54"))
+		(pin "4" (uuid "00465ad3-2ee7-46e3-8b97-b3467b429b48"))
+		(pin "2" (uuid "ff465940-6c92-4540-8497-b0d5434dde34"))
+		(pin "6" (uuid "06466445-bce2-40b5-8d97-8dd0cb17c258"))
+		(pin "5" (uuid "054662b2-fa8e-4f12-8e97-8b2792fb7784"))
+		(pin "3" (uuid "0446611f-3839-4d6f-8f97-888a5b1a8150"))
+		(pin "7" (uuid "03465f8c-75e5-4bcc-8897-b61923349964"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "U1") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:R")
+		(at 157.48 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "859a033c-e4e7-487c-8e4b-eaa9c1f8adcb")
+		(property "Reference" "R1"
+			(at 160.02 74.93 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "10k"
+			(at 160.02 77.47 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 160.02 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 160.02 83.82 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 160.02 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "094668fe-03e0-459e-8297-816b72ce6bd4"))
+		(pin "2" (uuid "fc4415f0-7001-4af0-8795-fc65380f06e5"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "R1") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:R")
+		(at 157.48 96.52 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6cd0c8fd-3fb5-4bed-8701-21683cc7312f")
+		(property "Reference" "R2"
+			(at 160.02 95.25 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "47k"
+			(at 160.02 97.79 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 160.02 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 160.02 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 160.02 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "fe441916-f4aa-4e36-8595-f083a8250085"))
+		(pin "2" (uuid "ff441aa9-b6ff-4fd9-8495-f33ce00fda29"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "R2") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:R")
+		(at 172.72 76.2 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e9804d6f-3b28-40bf-8251-a4fa5a4cede8")
+		(property "Reference" "R3"
+			(at 171.45 72.9 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "470"
+			(at 171.45 79.5 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 177.8 73.66 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 180.34 73.66 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 182.88 73.66 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "01441dcf-3ba8-431f-8a95-f45a5020e211"))
+		(pin "2" (uuid "02441f62-fdfd-44c2-8995-f6f787fce68d"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "R3") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:C")
+		(at 101.6 109.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "569c65eb-bdcb-4a7b-8d4d-8c7e2270dde7")
+		(property "Reference" "C1"
+			(at 104.9 107.95 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "10uF"
+			(at 104.9 110.49 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 104.14 114.3 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 104.14 116.84 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 104.14 119.38 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "04442288-82a6-4808-8f95-cb1df80dee75"))
+		(pin "2" (uuid "0544241b-44fa-49ab-8e95-cd8e2ff3d661"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "C1") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:C")
+		(at 116.84 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "761137e6-bbbd-4c06-8dc0-de73fe2c2a0d")
+		(property "Reference" "C2"
+			(at 120.14 113.03 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "10nF"
+			(at 120.14 115.57 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 119.38 119.38 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 119.38 121.92 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 119.38 124.46 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "8d4bb5f8-a2a3-4878-869a-5c6d1574418a"))
+		(pin "2" (uuid "904bbab1-e9a0-4d61-8b9a-5324bd68b882"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "C2") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:C")
+		(at 88.9 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e04d92ea-bc59-4dca-8b9c-7b7f112f6e86")
+		(property "Reference" "C3"
+			(at 92.2 74.93 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "100nF"
+			(at 92.2 77.47 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 91.44 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 91.44 83.82 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 91.44 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "924bbdd7-6e49-40a7-899a-54422d484f3a"))
+		(pin "2" (uuid "914bbc44-abf5-4f04-8a9a-55d1f551194a"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "C3") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:LED")
+		(at 195.58 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1697959a-749a-497a-8d46-7c0f690d1f9f")
+		(property "Reference" "D1"
+			(at 194.31 72.39 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "red"
+			(at 194.31 80.01 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "LED_SMD:LED_0805_2012Metric"
+			(at 198.12 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 198.12 83.82 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 198.12 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "934bbf6a-309e-424a-889a-56ff654476e2"))
+		(pin "2" (uuid "864baaf3-5253-4d03-8d9a-43668d9e011a"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "D1") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:Conn_01x02")
+		(at 76.2 96.52 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "67d64a49-17f4-4d79-8c07-a3dc90bf2b39")
+		(property "Reference" "J1"
+			(at 74.93 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Value" "PWR"
+			(at 74.93 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+			(at 78.74 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 78.74 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 78.74 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "88496f82-2168-4ae2-8398-86179ac29953"))
+		(pin "2" (uuid "89497115-e3bd-4c85-8298-9880d2bec0fb"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "J1") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:VCC")
+		(at 127 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "ff6d01ed-d032-49dd-84bc-e878276e923c")
+		(property "Reference" "#PWR01"
+			(at 129.54 73.66 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "VCC"
+			(at 129.54 78.74 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 129.54 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 129.54 83.82 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 129.54 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "87496def-5f13-493f-8c98-847a62726473"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR01") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 127 101.6 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "4147d91c-054f-485c-8a96-30895e9363b1")
+		(property "Reference" "#PWR02"
+			(at 129.54 99.06 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 129.54 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 129.54 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 129.54 109.22 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 129.54 111.76 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "85496ac9-da6a-45f9-8e98-835cf283f893"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR02") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:VCC")
+		(at 114.3 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "13e0c5cf-3d60-4b1f-8831-2c5aff30aaee")
+		(property "Reference" "#PWR03"
+			(at 116.84 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "VCC"
+			(at 116.84 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 116.84 88.9 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 116.84 91.44 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 116.84 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "834967a3-55c1-42b3-8898-8e3682e999eb"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR03") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:VCC")
+		(at 157.48 82.55 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "b390815a-ca62-493a-8841-68cfc3b6b183")
+		(property "Reference" "#PWR04"
+			(at 154.94 85.09 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "VCC"
+			(at 154.94 80.01 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 154.94 77.47 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 154.94 74.93 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 154.94 72.39 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "91497dad-f661-499d-8a98-9438928c375b"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR04") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 101.6 102.87 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "aaea6404-ea31-4ac4-813b-8d9162480443")
+		(property "Reference" "#PWR05"
+			(at 99.06 105.41 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 99.06 100.33 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 99.06 97.79 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 99.06 95.25 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 99.06 92.71 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "09647e12-2fef-4c72-82b5-97870a829fc0"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR05") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 116.84 107.95 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "ba94bfb1-bc7a-4261-8145-5624e462b58e")
+		(property "Reference" "#PWR06"
+			(at 114.3 110.49 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 114.3 105.41 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 114.3 102.87 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 114.3 100.33 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 114.3 97.79 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "07647aec-ab46-492c-8cb5-93799a53ed88"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR06") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:VCC")
+		(at 88.9 69.85 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "7bebe186-5379-43a6-803a-0813350dbe55")
+		(property "Reference" "#PWR07"
+			(at 91.44 67.31 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "VCC"
+			(at 91.44 72.39 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 91.44 74.93 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 91.44 77.47 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 91.44 80.01 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "056477c6-269d-45e6-8eb5-9e532a608ff0"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR07") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 88.9 82.55 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "b374ff2f-359a-467f-88a5-16bac3cef2c8")
+		(property "Reference" "#PWR08"
+			(at 91.44 80.01 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 91.44 85.09 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 91.44 87.63 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 91.44 90.17 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 91.44 92.71 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "036474a0-a1f4-42a0-88b5-9d35bac63148"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR08") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 189.23 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "9a0d7410-ae98-4f10-81dc-9d8566a909af")
+		(property "Reference" "#PWR09"
+			(at 191.77 73.66 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 191.77 78.74 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 191.77 81.28 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 191.77 83.82 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 191.77 86.36 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "11648aaa-4294-498a-8ab5-633fca59f990"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR09") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:VCC")
+		(at 68.58 96.52 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "a5492bf7-c170-44c7-8e98-c262abac89f4")
+		(property "Reference" "#PWR010"
+			(at 71.12 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "VCC"
+			(at 71.12 99.06 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 71.12 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 71.12 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 71.12 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "0562392f-7109-407f-8eb3-d0bac78f51b5"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR010") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:GND")
+		(at 68.58 99.06 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "434712f8-3f63-4578-8896-fb6d51c6d773")
+		(property "Reference" "#PWR011"
+			(at 71.12 96.52 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 71.12 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 71.12 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 71.12 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 71.12 109.22 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "07623c55-f5b2-43c5-8cb3-d5c03729b05d"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#PWR011") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:PWR_FLAG")
+		(at 68.58 96.52 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "82bc8a97-7a4e-4167-896d-6302742940f8")
+		(property "Reference" "#FLG01"
+			(at 71.12 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "PWR_FLAG"
+			(at 71.12 99.06 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 71.12 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 71.12 104.14 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 71.12 106.68 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "016232e3-67b7-49f3-8ab3-db76e745b425"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#FLG01") (unit 1)))
+		)
+	)
+	(symbol
+		(lib_id "blinky-555:PWR_FLAG")
+		(at 68.58 99.06 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "e4c9f1e6-8f5f-4606-8f18-1873ca743601")
+		(property "Reference" "#FLG02"
+			(at 66.04 101.6 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Value" "PWR_FLAG"
+			(at 66.04 96.52 0)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+		(property "Footprint" ""
+			(at 66.04 93.98 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 66.04 91.44 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(property "Description" ""
+			(at 66.04 88.9 0)
+			(effects (font (size 1.27 1.27)) (justify left) (hide yes))
+		)
+		(pin "1" (uuid "03623609-ec60-4d39-88b3-df9c57afbafd"))
+		(instances
+			(project "blinky-555" (path "/71739d06-8671-4726-8aa2-7493bac10e81" (reference "#FLG02") (unit 1)))
+		)
+	)
+	(sheet_instances (path "/" (page "1")))
+)

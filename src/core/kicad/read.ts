@@ -248,7 +248,7 @@ export function readSymbolList(s: SList, byName: Map<string, SList>, r: Report):
   return {
     name, reference: (Reference ?? 'U').replace(/\?$/, ''), value: Value, footprint: fpn || undefined,
     datasheet: Datasheet && Datasheet !== '~' ? Datasheet : undefined,
-    description: Description ?? props['ki_description'], properties: rest, units: list, power: flag(s, 'power'),
+    description: Description ?? props['ki_description'], properties: rest, units: list, power: !!find(s, 'power'),
   };
 }
 

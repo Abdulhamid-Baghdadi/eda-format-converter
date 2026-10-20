@@ -11,6 +11,19 @@ import { join, dirname } from 'node:path';
 import { convert, readFile } from '../src/core/index';
 import { readKicadPcb, placeDown } from '../src/core/kicad/read';
 import { boardDiff } from './boardDiff';
+import { netlist, netlistDiff, type Netlist } from '../src/core/sch';
+
+function kicadNetlist(file: string): Netlist {
+  const x = file + '.net.xml';
+  run(['sch', 'export', 'netlist', '--format', 'kicadxml', '-o', x, file]);
+  const src = readFileSync(x, 'utf8');
+  const nets: Netlist['nets'] = [];
+  for (const m of src.matchAll(/<net code="\d+" name="([^"]*)"[^>]*>([\s\S]*?)<\/net>/g)) {
+    const pins = [...m[2].matchAll(/<node ref="([^"]+)" pin="([^"]+)"/g)].filter(n => !n[1].startsWith('#')).map(n => `${n[1]}.${n[2]}`).sort();
+    if (pins.length) nets.push({ name: m[1], pins });
+  }
+  return { nets };
+}
 
 const CANDIDATES = [process.env.KICAD_CLI, 'C:/Program Files/KiCad/10.0/bin/kicad-cli.exe', 'C:/Program Files/KiCad/9.0/bin/kicad-cli.exe', '/usr/bin/kicad-cli', '/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli'];
 const CLI = CANDIDATES.find(p => p && existsSync(p));
@@ -62,6 +75,26 @@ describe.skipIf(!CLI)('KiCad opens what we write', () => {
     const moved = { ...ours.board, footprints: ours.board.footprints.map(f => ({ ...f, at: sh(f.at) })), tracks: ours.board.tracks.map(t => ({ ...t, a: sh(t.a), b: sh(t.b), mid: t.mid && sh(t.mid) })), vias: ours.board.vias.map(v => ({ ...v, at: sh(v.at) })), holes: ours.board.holes.map(h => ({ ...h, at: sh(h.at) })) };
     expect(boardDiff(moved, theirs, { tol: 0.005 }).problems).toEqual([]);
   }, 120_000);
+
+  it("KiCad's netlist of the KiCad sample equals ours", () => {
+    const d = readFile(sample('blinky-555.kicad_sch'))[0].design;
+    if (d.kind !== 'schematic') throw new Error();
+    expect(netlistDiff(netlist(d.schematic), kicadNetlist(join('public', 'samples', 'blinky-555.kicad_sch')))).toEqual([]);
+  }, 120_000);
+
+  for (const f of ['blinky-555.kicad_sch', 'blinky-555.sch', 'blinky-555.schematic.json', 'usb-power-adapter.SchDoc']) {
+    it(`${f} -> .kicad_sch: KiCad reads the same connections${f.endsWith('.json') || f.endsWith('.SchDoc') ? '' : ' and ERC has no errors'}`, () => {
+      const [res] = convert(sample(f), 'kicad');
+      const [root] = write('sch-' + f, res.outputs);
+      if (res.input.design.kind !== 'schematic') throw new Error();
+      expect(netlistDiff(netlist(res.input.design.schematic), kicadNetlist(root))).toEqual([]);
+      if (f.endsWith('.json') || f.endsWith('.SchDoc')) return; // no PWR_FLAG in EasyEDA/Altium sources: ERC flags undriven supplies
+      const rep = join(dir, f + '.erc.json');
+      run(['sch', 'erc', '--format', 'json', '--severity-error', '-o', rep, root]);
+      const erc = JSON.parse(readFileSync(rep, 'utf8'));
+      expect(erc.sheets.flatMap((x: { violations: { description: string }[] }) => x.violations.map(v => v.description))).toEqual([]);
+    }, 120_000);
+  }
 
   for (const f of ['demo-parts.lbr', 'SOT-23-5_regulator.json', 'demo-parts.zip', 'QFN-24_4x4.PcbLib', 'CM4.SchLib']) {
     it(`${f} -> KiCad libraries load and plot`, () => {
