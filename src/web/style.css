@@ -156,3 +156,8 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 18px
 .outlist summary::-webkit-details-marker { display: none; }
 .outmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 240px; max-height: 50vh; overflow: auto; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
 .outmenu .dlbtn { text-align: left; border: 0; }
+
+.ptabs { display: inline-flex; gap: 4px; background: var(--soft); padding: 3px; border-radius: 9px; }
+.ptab { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--muted); }
+.ptab.on { background: var(--panel); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.itembar { row-gap: 8px; }

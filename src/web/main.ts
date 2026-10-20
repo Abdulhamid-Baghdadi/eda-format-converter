@@ -17,17 +17,13 @@ const state = {
 };
 
 const SAMPLES: { file: string; label: string; from: Format; kind: string }[] = [
-  { file: 'blinky-555.kicad_sch', label: '555 blinker schematic', from: 'kicad', kind: 'KiCad schematic' },
-  { file: 'blinky-555.sch', label: '555 blinker schematic', from: 'eagle', kind: 'Eagle schematic' },
-  { file: 'blinky-555.schematic.json', label: '555 blinker schematic', from: 'easyeda', kind: 'EasyEDA schematic' },
-  { file: 'blinky-555.brd', label: '555 blinker board', from: 'eagle', kind: 'Eagle board' },
-  { file: 'blinky-555.kicad_pcb', label: '555 blinker board', from: 'kicad', kind: 'KiCad board' },
-  { file: 'blinky-555.json', label: '555 blinker board', from: 'easyeda', kind: 'EasyEDA PCB' },
+  { file: 'blinky-555-kicad.zip', label: '555 blinker project', from: 'kicad', kind: 'schematic + board' },
+  { file: 'blinky-555-eagle.zip', label: '555 blinker project', from: 'eagle', kind: 'schematic + board' },
+  { file: 'blinky-555-easyeda.zip', label: '555 blinker project', from: 'easyeda', kind: 'schematic + board' },
+  { file: 'usb-power-adapter-altium.zip', label: 'USB power adapter project', from: 'altium', kind: 'schematic + board' },
   { file: 'demo-parts.lbr', label: 'Eagle library', from: 'eagle', kind: 'symbols + packages' },
-  { file: 'SOT-23-5_regulator.json', label: 'EasyEDA part', from: 'easyeda', kind: 'symbol + footprint' },
   { file: 'demo-parts.zip', label: 'KiCad library', from: 'kicad', kind: '.kicad_sym + .pretty' },
-  { file: 'usb-power-adapter.SchDoc', label: 'USB power adapter', from: 'altium', kind: 'Altium schematic' },
-  { file: 'usb-power-adapter.PcbDoc', label: 'USB power adapter', from: 'altium', kind: 'Altium board' },
+  { file: 'SOT-23-5_regulator.json', label: 'EasyEDA part', from: 'easyeda', kind: 'symbol + footprint' },
   { file: 'QFN-24_4x4.PcbLib', label: 'QFN-24 footprint', from: 'altium', kind: 'Altium .PcbLib' },
   { file: 'CM4.SchLib', label: 'Raspberry Pi CM4', from: 'altium', kind: 'Altium .SchLib, 21 units' },
 ];
@@ -177,14 +173,18 @@ function render(keepView = false) {
   const its = items(r);
   const it = its[Math.min(state.sel.item, its.length - 1)];
   // item selector
-  const resultTabs = (e.results!.length > 1) ? `<select id="resultSel">${e.results!.map((x, i) => `<option value="${i}" ${i === state.sel.result ? 'selected' : ''}>${esc(x.input.file)}</option>`).join('')}</select>` : '';
+  // a project (zip or several files) holds a schematic, a board and/or libraries: one tab each, all converted together
+  const partLabel = (d: Design) => d.kind === 'schematic' ? `▤ Schematic · ${d.schematic.sheets.length} sheet${d.schematic.sheets.length > 1 ? 's' : ''}` : d.kind === 'board' ? '▦ Board layout' : `⏚ Library · ${d.library.symbols.length + d.library.footprints.length} items`;
+  const resultTabs = (e.results!.length > 1) ? `<div class="ptabs" role="tablist">${e.results!.map((x, i) => `<button role="tab" class="ptab${i === state.sel.result ? ' on' : ''}" data-r="${i}" aria-selected="${i === state.sel.result}">${partLabel(x.input.design)}</button>`).join('')}</div>` : '';
   $('itemBar').innerHTML = resultTabs + (its.length > 1
     ? `<select id="itemSel" aria-label="Item">${its.map((x, i) => `<option value="${i}" ${i === state.sel.item ? 'selected' : ''}>${x.kind === 'symbol' ? '⏚ symbol' : x.kind === 'sheet' ? '▤ sheet' : '▣ footprint'} · ${esc(x.label)}</option>`).join('')}</select><span class="muted small">${its.length} items</span>`
     : `<strong>${esc(it.label)}</strong> <span class="muted small">${it.kind}</span>`);
   // outputs
   const btn = (o: OutputFile, i: number) => `<button class="ghost small dlbtn" data-o="${i}" title="Download ${esc(o.name)}">⭳ ${esc(o.name.split('/').pop()!)}</button>`;
-  $('outputs').innerHTML = r.outputs.length <= 3 ? r.outputs.map(btn).join('')
-    : `<details class="outlist"><summary class="ghost small">⭳ ${r.outputs.length} output files</summary><div class="outmenu">${r.outputs.map(btn).join('')}</div></details>`;
+  const allOuts = e.results!.flatMap((x, ri) => x.outputs.map((o, oi) => ({ o, key: `${ri}:${oi}` })));
+  const btn2 = (x: { o: OutputFile; key: string }) => btn(x.o, 0).replace('data-o="0"', `data-o="${x.key}"`);
+  $('outputs').innerHTML = allOuts.length <= 3 ? allOuts.map(btn2).join('')
+    : `<details class="outlist"><summary class="ghost small">⭳ ${allOuts.length} output files</summary><div class="outmenu">${allOuts.map(btn2).join('')}</div></details>`;
   // previews
   const v = views(r, it, state.sel.unit);
   for (const id of ['srcSvg', 'dstSvg']) $(id).classList.toggle('paper', it.kind === 'symbol' || it.kind === 'sheet');
@@ -217,6 +217,10 @@ function download(name: string, data: string | Uint8Array, type = 'application/o
 
 function allOutputs(): OutputFile[] {
   const out: OutputFile[] = [];
+  if (state.target === 'kicad') {
+    const first = state.entries.flatMap(e => e.results ?? []).flatMap(r => r.outputs).find(o => /\.kicad_(sch|pcb)$/.test(o.name));
+    if (first) out.push({ name: first.name.replace(/\.kicad_(sch|pcb)$/, '.kicad_pro'), data: JSON.stringify({ meta: { filename: first.name.replace(/\.kicad_(sch|pcb)$/, '.kicad_pro'), version: 1 } }, null, 2) + '\n' });
+  }
   const used = new Set<string>();
   for (const e of state.entries) for (const r of e.results ?? []) for (const o of r.outputs) {
     let n = o.name; let k = 2;
@@ -269,14 +273,22 @@ function init() {
   document.addEventListener('change', ev => {
     const t = ev.target as HTMLElement;
     if (t.id === 'itemSel') { state.sel.item = +(t as HTMLSelectElement).value; state.sel.unit = 0; render(); }
-    if (t.id === 'resultSel') { state.sel.result = +(t as HTMLSelectElement).value; state.sel.item = 0; state.sel.unit = 0; render(); }
+
     if (t.matches('#layers input')) { const l = (t as HTMLInputElement).dataset.l as LayerGroup; if ((t as HTMLInputElement).checked) state.hidden.delete(l); else state.hidden.add(l); render(true); }
+  });
+  $('itemBar').addEventListener('click', ev => {
+    const b = (ev.target as HTMLElement).closest('.ptab') as HTMLElement | null;
+    if (!b) return;
+    state.sel.result = +b.dataset.r!; state.sel.item = 0; state.sel.unit = 0;
+    render();
   });
   $('outputs').addEventListener('click', ev => {
     const b = (ev.target as HTMLElement).closest('button') as HTMLElement | null;
-    const r = state.entries[state.sel.entry]?.results?.[state.sel.result];
-    if (!b || !r) return;
-    const o = r.outputs[+b.dataset.o!];
+    const e = state.entries[state.sel.entry];
+    if (!b || !e?.results) return;
+    const [ri, oi] = b.dataset.o!.split(':').map(Number);
+    const o = e.results[ri]?.outputs[oi];
+    if (!o) return;
     download(o.name.split('/').pop()!, o.data);
   });
   $('zipBtn').addEventListener('click', () => {

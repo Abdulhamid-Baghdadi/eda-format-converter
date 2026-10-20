@@ -153,6 +153,8 @@ Wider checks, run locally against files that can't be redistributed:
 
 ## Samples
 
+The app's first samples are **whole projects**: a zip with the schematic and the board, in KiCad, Eagle, EasyEDA and Altium form. Both convert together and show as *Schematic* and *Board layout* tabs. You can drop your own project zip, or several files at once, the same way.
+
 [`public/samples/`](public/samples) has small, freely licensed files to try. The app has a button for each one:
 
 - **`blinky-555`** is a 555 LED blinker: a **schematic** (`.kicad_sch`, Eagle `.sch`, EasyEDA `.schematic.json`) and its 2-layer board (39 × 20 mm, SOIC-8, 0805 parts, a pin header, one part on the bottom at 45°, a GND pour on the bottom layer, and rounded corners), in KiCad, Eagle and EasyEDA versions. It was built for this project from footprints in the official KiCad library ([`scripts/make-samples.ts`](scripts/make-samples.ts)).

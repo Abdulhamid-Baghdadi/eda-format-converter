@@ -199,3 +199,15 @@ for (const o of writeKicadSchematic(sch)) writeFileSync(OUT + o.name, o.data);
 const schDesign = { kind: 'schematic' as const, name: 'blinky-555', schematic: sch };
 for (const t of ['eagle', 'easyeda'] as const) for (const o of writeDesign(schDesign, t)) writeFileSync(OUT + o.name, o.data);
 console.log('schematic samples written');
+
+// ---------------------------------------------------------------- whole projects: schematic + board in one zip
+const project = (zipName: string, files: string[]) => {
+  const z: Record<string, Uint8Array> = {};
+  for (const f of files) z[f.replace(/^.*\//, '')] = readFileSync(OUT + f);
+  writeFileSync(OUT + zipName, zipSync(z, { level: 9, mtime: new Date('2026-01-01') }));
+};
+project('blinky-555-kicad.zip', ['blinky-555.kicad_sch', 'blinky-555.kicad_pcb']);
+project('blinky-555-eagle.zip', ['blinky-555.sch', 'blinky-555.brd']);
+project('blinky-555-easyeda.zip', ['blinky-555.schematic.json', 'blinky-555.json']);
+project('usb-power-adapter-altium.zip', ['usb-power-adapter.SchDoc', 'usb-power-adapter.PcbDoc']);
+console.log('project zips written');
