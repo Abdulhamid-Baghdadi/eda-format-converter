@@ -6,12 +6,18 @@ import { writeKicadFootprint, writeKicadSymbols, writeKicadPcb, kicadName } from
 import { readEagleLbr, readEagleBoard } from './eagle/read';
 import { writeEagleLbr, writeEagleBoard } from './eagle/write';
 import { readEasyEda } from './easyeda/read';
+import { readCfb } from './altium/cfb';
+import { readAltiumPcbDoc, readAltiumPcbLib } from './altium/pcb';
+import { readAltiumSchLib } from './altium/sch';
 import { writeEasyFootprint, writeEasySymbol, writeEasyBoard } from './easyeda/write';
 
 export * from './model';
 export { Report } from './report';
 
-export type Format = 'kicad' | 'eagle' | 'easyeda';
+/** Formats we can read. */
+export type Format = 'kicad' | 'eagle' | 'easyeda' | 'altium';
+/** Formats we can write (Altium imports KiCad and Eagle itself). */
+export type Target = 'kicad' | 'eagle' | 'easyeda';
 export const FORMATS: { id: Format; label: string; lib: string; board: string }[] = [
   { id: 'kicad', label: 'KiCad 6–10', lib: '.kicad_sym + .pretty/.kicad_mod', board: '.kicad_pcb' },
   { id: 'eagle', label: 'Eagle / Fusion Electronics', lib: '.lbr', board: '.brd' },
@@ -29,6 +35,19 @@ export class UnsupportedError extends Error {}
 export function readFile(f: InputFile): ReadResult[] {
   const lower = f.name.toLowerCase();
   const bytes = typeof f.data === 'string' ? strToU8(f.data) : f.data;
+  if (bytes[0] === 0xd0 && bytes[1] === 0xcf && bytes[2] === 0x11 && bytes[3] === 0xe0) {
+    // OLE compound file: Altium binary documents
+    const streams = readCfb(bytes);
+    const header = text(streams.get('FileHeader')?.subarray(0, 200) ?? new Uint8Array(0));
+    const r = new Report();
+    const name = base(f.name);
+    const lib = (library: Library): ReadResult[] => [{ file: f.name, format: 'altium', design: { kind: 'library', name, library }, report: r }];
+    if (streams.has('Board6/Data')) return [{ file: f.name, format: 'altium', design: { kind: 'board', name, board: readAltiumPcbDoc(bytes, r, name) }, report: r }];
+    if (/PCB [\d.]+ Binary Library/i.test(header)) return lib(readAltiumPcbLib(bytes, r));
+    if (/Schematic Library/i.test(header)) return lib({ symbols: readAltiumSchLib(bytes, r), footprints: [] });
+    if (/Schematic/i.test(header)) throw new UnsupportedError('Altium schematics (.SchDoc) are not supported yet — boards (.PcbDoc) and libraries (.PcbLib, .SchLib) are.');
+    throw new UnsupportedError(`${f.name} is an OLE file but not a supported Altium document`);
+  }
   if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
     if (/\.(epro|elibz?)$/.test(lower)) throw new UnsupportedError('EasyEDA Pro (.epro/.elibz) files are not supported yet — export as EasyEDA Standard JSON, or use File ▸ Export ▸ Altium/KiCad in EasyEDA Pro.');
     const entries = unzipSync(bytes);
@@ -80,12 +99,12 @@ export function readFile(f: InputFile): ReadResult[] {
     return one('easyeda', res.kind === 'board' ? { kind: 'board', name, board: res.board } : { kind: 'library', name, library: res.library });
   }
   if (/^EESchema|^PCBNEW-LibModule|^\$MODULE/.test(trimmed)) throw new UnsupportedError('Legacy KiCad 4/5 libraries (.lib/.mod) are not supported — open them in KiCad and save in the new format.');
-  if (/^\|RECORD=|^\x00/.test(trimmed) || /\.(schdoc|pcbdoc|schlib|pcblib)$/.test(lower)) throw new UnsupportedError('Altium files are not supported yet.');
+  if (/^\|RECORD=/.test(trimmed) || /\.(schdoc|pcbdoc|schlib|pcblib)$/.test(lower)) throw new UnsupportedError('Altium ASCII files are not supported — save them as binary .PcbDoc / .PcbLib / .SchLib.');
   throw new UnsupportedError(`Could not recognise ${f.name}`);
 }
 
 /** Write a design in the target format. */
-export function writeDesign(d: Design, target: Format, r = new Report()): OutputFile[] {
+export function writeDesign(d: Design, target: Target, r = new Report()): OutputFile[] {
   const name = kicadName(d.name);
   if (d.kind === 'board') {
     if (target === 'kicad') return [{ name: `${name}.kicad_pcb`, data: writeKicadPcb(d.board, r) }];
@@ -116,7 +135,7 @@ export function writeDesign(d: Design, target: Format, r = new Report()): Output
 
 export interface ConvertResult { input: ReadResult; outputs: OutputFile[]; writeReport: Report }
 
-export function convert(f: InputFile, target: Format): ConvertResult[] {
+export function convert(f: InputFile, target: Target): ConvertResult[] {
   return readFile(f).map(input => {
     const writeReport = new Report();
     const outputs = writeDesign(input.design, target, writeReport);

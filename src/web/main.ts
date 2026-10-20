@@ -1,16 +1,16 @@
 import './style.css';
-import { readFile, writeDesign, zipOutputs, type Format, type ConvertResult, type ReadResult } from '../core/index';
+import { readFile, writeDesign, zipOutputs, type Format, type Target, type ConvertResult, type ReadResult } from '../core/index';
 import type { Design, Library, OutputFile } from '../core/model';
 import { Report } from '../core/report';
 import { LAYER_GROUPS, renderBoard, renderFootprint, renderSymbol, type LayerGroup, type View } from './render';
-import { MATRIX, FORMAT_NOTES } from './matrix';
+import { MATRIX, FORMAT_NOTES, ALTIUM_IN } from './matrix';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-const LABEL: Record<Format, string> = { kicad: 'KiCad', eagle: 'Eagle', easyeda: 'EasyEDA' };
+const LABEL: Record<Format, string> = { kicad: 'KiCad', eagle: 'Eagle', easyeda: 'EasyEDA', altium: 'Altium' };
 
 interface Entry { name: string; results?: (ConvertResult & { back: Design[] })[]; error?: string; data: Uint8Array }
 const state = {
-  target: 'kicad' as Format,
+  target: 'kicad' as Target,
   entries: [] as Entry[],
   sel: { entry: 0, result: 0, item: 0, unit: 0 },
   hidden: new Set<LayerGroup>(['CrtYd', 'Mask', 'B.Fab', 'F.Fab']),
@@ -23,6 +23,9 @@ const SAMPLES: { file: string; label: string; from: Format; kind: string }[] = [
   { file: 'demo-parts.lbr', label: 'Eagle library', from: 'eagle', kind: 'symbols + packages' },
   { file: 'SOT-23-5_regulator.json', label: 'EasyEDA part', from: 'easyeda', kind: 'symbol + footprint' },
   { file: 'demo-parts.zip', label: 'KiCad library', from: 'kicad', kind: '.kicad_sym + .pretty' },
+  { file: 'usb-power-adapter.PcbDoc', label: 'USB power adapter', from: 'altium', kind: 'Altium board' },
+  { file: 'QFN-24_4x4.PcbLib', label: 'QFN-24 footprint', from: 'altium', kind: 'Altium .PcbLib' },
+  { file: 'CM4.SchLib', label: 'Raspberry Pi CM4', from: 'altium', kind: 'Altium .SchLib, 21 units' },
 ];
 
 // ------------------------------------------------------------------ conversion
@@ -238,7 +241,7 @@ function init() {
   $('targetSeg').addEventListener('click', ev => {
     const b = (ev.target as HTMLElement).closest('button') as HTMLElement | null;
     if (!b) return;
-    state.target = b.dataset.t as Format;
+    state.target = b.dataset.t as Target;
     for (const x of $('targetSeg').querySelectorAll('button')) x.setAttribute('aria-checked', String(x === b));
     $('targetHint').textContent = FORMAT_NOTES[state.target];
     for (const e of state.entries) convertEntry(e);
@@ -281,14 +284,15 @@ function init() {
     try { localStorage.setItem('theme', next); } catch { /* private mode */ }
   });
   $('matrixBody').innerHTML = `<p class="muted">Any reader pairs with any writer through one neutral model. Rows describe what each format can <em>hold</em>: ✅ exact · ⚠️ approximated (listed in the report) · ❌ dropped.</p>
-    <table class="matrix"><thead><tr><th></th><th>KiCad</th><th>Eagle</th><th>EasyEDA Std</th></tr></thead><tbody>${MATRIX.map(m => `<tr><td>${m.item}</td><td>${m.kicad}</td><td>${m.eagle}</td><td>${m.easyeda}</td></tr>`).join('')}</tbody></table>`;
+    <table class="matrix"><thead><tr><th></th><th>KiCad</th><th>Eagle</th><th>EasyEDA Std</th></tr></thead><tbody>${MATRIX.map(m => `<tr><td>${m.item}</td><td>${m.kicad}</td><td>${m.eagle}</td><td>${m.easyeda}</td></tr>`).join('')}</tbody></table>
+    <h3>Altium (input)</h3><p class="muted">${ALTIUM_IN}</p>`;
   $('matrixBtn').addEventListener('click', () => ($('matrix') as HTMLDialogElement).showModal());
   window.addEventListener('resize', () => { if (state.entries.length && lastBox) fit(lastBox); });
   render();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   // deep link: ?sample=blinky-555.brd&to=kicad
   const q = new URLSearchParams(location.search);
-  const to = q.get('to') as Format | null;
+  const to = q.get('to') as Target | null;
   if (to && LABEL[to]) (document.querySelector(`#targetSeg button[data-t="${to}"]`) as HTMLElement)?.click();
   const sample = q.get('sample');
   if (sample) (document.querySelector(`button.sample[data-f="${CSS.escape(sample)}"]`) as HTMLElement)?.click();

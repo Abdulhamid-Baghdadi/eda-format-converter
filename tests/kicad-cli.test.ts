@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { convert, readFile } from '../src/core/index';
-import { readKicadPcb } from '../src/core/kicad/read';
+import { readKicadPcb, placeDown } from '../src/core/kicad/read';
 import { boardDiff } from './boardDiff';
 
 const CANDIDATES = [process.env.KICAD_CLI, 'C:/Program Files/KiCad/10.0/bin/kicad-cli.exe', 'C:/Program Files/KiCad/9.0/bin/kicad-cli.exe', '/usr/bin/kicad-cli', '/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli'];
@@ -44,7 +44,26 @@ describe.skipIf(!CLI)('KiCad opens what we write', () => {
     expect(boardDiff(ours.board, readKicadPcb(readFileSync(out, 'utf8')), { checkSizes: false }).problems).toEqual([]);
   }, 120_000);
 
-  for (const f of ['demo-parts.lbr', 'SOT-23-5_regulator.json', 'demo-parts.zip']) {
+  it("KiCad's Altium importer agrees with our Altium reader", () => {
+    const src = join('public', 'samples', 'usb-power-adapter.PcbDoc');
+    const out = join(dir, 'altium-import.kicad_pcb');
+    run(['pcb', 'import', '--format', 'altium', '-o', out, src]);
+    const ours = readFile(sample('usb-power-adapter.PcbDoc'))[0].design;
+    if (ours.kind !== 'board') throw new Error();
+    const theirs = readKicadPcb(readFileSync(out, 'utf8'));
+    // KiCad moves the design onto its sheet: find the shift from pads matched by reference and number
+    const world = (b: typeof theirs) => new Map(b.footprints.flatMap(f => f.footprint.pads.map(p => [`${f.ref}.${p.number}`, placeDown(f, p.at)] as const)));
+    const wa = world(ours.board), wb = world(theirs);
+    const ds = [...wa].filter(([k]) => wb.has(k)).map(([k, v]) => ({ x: wb.get(k)!.x - v.x, y: wb.get(k)!.y - v.y }));
+    expect(ds.length).toBeGreaterThan(10);
+    const med = (xs: number[]) => xs.sort((p, q) => p - q)[xs.length >> 1];
+    const d = { x: med(ds.map(v => v.x)), y: med(ds.map(v => v.y)) };
+    const sh = (p: { x: number; y: number }) => ({ x: p.x + d.x, y: p.y + d.y });
+    const moved = { ...ours.board, footprints: ours.board.footprints.map(f => ({ ...f, at: sh(f.at) })), tracks: ours.board.tracks.map(t => ({ ...t, a: sh(t.a), b: sh(t.b), mid: t.mid && sh(t.mid) })), vias: ours.board.vias.map(v => ({ ...v, at: sh(v.at) })), holes: ours.board.holes.map(h => ({ ...h, at: sh(h.at) })) };
+    expect(boardDiff(moved, theirs, { tol: 0.005 }).problems).toEqual([]);
+  }, 120_000);
+
+  for (const f of ['demo-parts.lbr', 'SOT-23-5_regulator.json', 'demo-parts.zip', 'QFN-24_4x4.PcbLib', 'CM4.SchLib']) {
     it(`${f} -> KiCad libraries load and plot`, () => {
       for (const res of convert(sample(f), 'kicad')) {
         const paths = write(f, res.outputs);

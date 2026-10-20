@@ -18,6 +18,8 @@ export const MATRIX: { item: string; kicad: string; eagle: string; easyeda: stri
   { item: 'Schematics', kicad: '🛠 planned', eagle: '🛠 planned', easyeda: '🛠 planned' },
   { item: 'Design rules, net classes, dimensions, images', kicad: '❌', eagle: '❌', easyeda: '❌' },
 ];
+/** What the Altium reader takes in (Altium is input-only). */
+export const ALTIUM_IN = 'Altium Designer / CircuitMaker binary files are read (not written): .PcbDoc boards (components, pads incl. slots and rounded rects, tracks, arcs, vias, nets, polygon pours, copper regions and fills, cutouts, board outline, text), .PcbLib footprints and .SchLib symbols (multi-part, binary pins, footprint link). Mechanical layers go to Dwgs.User; 3D bodies, rules and dimensions are dropped.';
 export const FORMAT_NOTES: Record<string, string> = {
   kicad: 'KiCad 8 format (opens in KiCad 8, 9, 10)',
   eagle: 'Eagle 9 XML (Eagle 6+, Fusion Electronics, and KiCad’s importer)',

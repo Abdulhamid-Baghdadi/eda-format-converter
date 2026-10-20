@@ -5,7 +5,7 @@ import { join, basename } from 'node:path';
 import { readFile, writeDesign, type Format } from '../src/core/index';
 import { footprintDiff, symbolDiff } from '../tests/libDiff';
 const [out, ...args] = process.argv.slice(2);
-const files = args.flatMap(a => statSync(a).isDirectory() ? readdirSync(a).filter(f => /\.(kicad_mod|kicad_sym|lbr|json)$/.test(f)).map(f => join(a, f)) : [a]);
+const files = args.flatMap(a => statSync(a).isDirectory() ? readdirSync(a).filter(f => /\.(kicad_mod|kicad_sym|lbr|json|pcblib|schlib)$/i.test(f)).map(f => join(a, f)) : [a]);
 mkdirSync(out, { recursive: true });
 const totals: Record<string, { items: number; problems: number; samples: string[] }> = {};
 for (const file of files) {

@@ -1,10 +1,10 @@
 # EDA Format Converter
 
-*KiCad ⇄ Eagle ⇄ EasyEDA, in the browser*
+*KiCad ⇄ Eagle ⇄ EasyEDA, and from Altium, in the browser*
 
 <img src="docs/icon.svg" alt="" width="48" align="right">
 
-A converter for **PCB boards, schematic symbols and footprints** between **KiCad**, **Eagle / Fusion Electronics** and **EasyEDA Standard**, in any direction. Drop a file in the [web app](https://abdulhamid-baghdadi.github.io/eda-format-converter/), choose a target format, and compare the source and the converted result side by side before you download it. Everything runs in your browser, so your designs are never uploaded. The same code also runs as a command-line tool.
+A converter for **PCB boards, schematic symbols and footprints** between **KiCad**, **Eagle / Fusion Electronics** and **EasyEDA Standard** in any direction, and from **Altium Designer** into any of them. Drop a file in the [web app](https://abdulhamid-baghdadi.github.io/eda-format-converter/), choose a target format, and compare the source and the converted result side by side before you download it. Everything runs in your browser, so your designs are never uploaded. The same code also runs as a command-line tool.
 
 <p align="center"><img src="docs/demo.gif" alt="The web app: an Eagle board converted to KiCad, zooming and panning both previews, switching the target to EasyEDA, then an EasyEDA part and an Eagle library with a multi-unit op-amp, and the conversion report" width="800"></p>
 
@@ -26,10 +26,13 @@ A converter for **PCB boards, schematic symbols and footprints** between **KiCad
 | **KiCad 6 – 10** | ✅ | ✅ | `.kicad_pcb`, `.kicad_mod` (or a zipped `.pretty`), `.kicad_sym` |
 | **Eagle 6 – 9 / Fusion Electronics** | ✅ | ✅ | `.brd`, `.lbr` (XML) |
 | **EasyEDA Standard** | ✅ | ✅ | PCB, footprint and symbol `.json` (*File › EasyEDA Source*), and the JSON of a part from EasyEDA's component API |
+| **Altium Designer / CircuitMaker** | ✅ | — | `.PcbDoc`, `.PcbLib`, `.SchLib` (binary) |
+
+Altium is read only: it converts to KiCad, Eagle or EasyEDA. Writing Altium files isn't planned, because Altium imports KiCad and Eagle designs itself.
 
 KiCad output uses the **KiCad 8 file format**, which KiCad 8, 9 and 10 all open. Eagle output is Eagle 9 XML. EasyEDA output opens with *File › Open › EasyEDA Source* in EasyEDA Standard.
 
-Schematics (`.kicad_sch`, Eagle `.sch`, EasyEDA schematics) and EasyEDA Pro (`.epro`) files are not converted yet, and the app tells you so when you drop one. See [Roadmap](#roadmap).
+Schematics (`.kicad_sch`, Eagle `.sch`, EasyEDA schematics, Altium `.SchDoc`) and EasyEDA Pro (`.epro`) files are not converted yet, and the app tells you so when you drop one. See [Roadmap](#roadmap).
 
 ## What converts
 
@@ -54,6 +57,20 @@ Each row says what the **target** format can hold. ✅ means exact, ⚠️ means
 | Copper layers | ✅ up to 32 | ✅ up to 16 | ✅ up to 34 |
 | Schematics | 🛠 planned | 🛠 planned | 🛠 planned |
 | Design rules, net classes, dimensions, images | ❌ | ❌ | ❌ |
+
+### From Altium
+
+The Altium reader takes in:
+
+- **Boards (`.PcbDoc`):** components on both sides, pads (round, rectangular, rounded-rectangle, octagonal, slotted holes), tracks and arcs, vias, nets, polygon pours (as zones), copper regions and fills, polygon cutouts and keepouts, board cutouts, the board outline (with arcs), text, and the inner layers in stack order.
+- **Footprint libraries (`.PcbLib`):** the same primitives per footprint. Vias inside a footprint, such as thermal vias in an exposed pad, become unnumbered pads.
+- **Symbol libraries (`.SchLib`):** multi-part symbols, pins (type, direction, inverted/clock, hidden), body graphics, the designator prefix, parameters and the linked footprint name.
+
+Some things are approximated or dropped, and each case is listed in the report:
+
+- Mechanical layers go to `Dwgs.User`, because what each one means differs between projects.
+- TrueType text is drawn with the target's stroke font.
+- 3D bodies, design rules, dimensions, alternate (De Morgan) symbol views and pad-hole offsets are dropped.
 
 ## Using it
 
@@ -87,16 +104,18 @@ node dist/cli.mjs my-parts.lbr part.json footprints.zip --to easyeda --out conve
 - **KiCad**: a small S-expression parser and writer ([`kicad/`](src/core/kicad)). It reads KiCad 6 to 10, including KiCad 5 `module`s with centre-angle arcs and KiCad 10 boards that store nets by name. It writes the KiCad 8 format.
 - **Eagle**: XML through `fast-xml-parser` ([`eagle/`](src/core/eagle)). This covers wire `curve` arcs, the `MRθ` element transform (rotate, then mirror about Y, as KiCad's own importer does), auto pad and via diameters from the board's design rules, smashed name/value labels, and devices → symbols with gates and connects.
 - **EasyEDA Standard**: the `~`-separated shape strings in 10-mil units ([`easyeda/`](src/core/easyeda)), including SVG path arcs, polygon pads, slots, `LIB` footprint instances on boards, and pin paths that give each pin's direction.
+- **Altium** ([`altium/`](src/core/altium)): Altium's binary files are OLE compound files. A small reader written from Microsoft's published [MS-CFB] specification opens the container. Inside it, text records (`|KEY=VALUE|`) hold components, nets and the board outline, and little-endian binary records hold pads, tracks, arcs, vias, text, fills and regions, in units of 1/10000 mil. The record layouts were checked against real files and against the Apache-2.0 [AltiumSharp](https://github.com/issus/AltiumSharp) project's documentation of the format. No code from GPL importers was used.
 - The **web app** ([`src/web/`](src/web)) is TypeScript and Vite with no UI framework. The previews are SVG drawn from the model. The *result* pane re-reads the written file, so what you see is what was written.
 
 The format readers and writers were written for this project from the published file formats and from inspecting real files. No code from GPL or AGPL projects (KiCad's importers, easyeda2kicad) was used, so the project can be MIT licensed.
 
 ## How it is tested
 
-`npm test` runs 47 tests ([`tests/`](tests)):
+`npm test` runs 63 tests ([`tests/`](tests)):
 
 - **Every sample through every format and back** (boards and libraries, 3 × 3), compared geometrically: each pad's world position, size and net, every track and via, and each pin's number, position and direction.
 - **In the real KiCad** (when `kicad-cli` is installed): the demo board converted *from KiCad, Eagle and EasyEDA* must pass **KiCad's DRC with zero violations and zero unconnected items** after refilling zones. Converted symbol and footprint libraries must load and plot. **KiCad's own Eagle importer** must place every pad exactly where this project's Eagle reader does.
+- **Altium**: the sample board, footprint and symbol library are read and converted to all three formats without moving any copper or pin, and (with KiCad installed) **KiCad's own Altium importer places every pad, track and via exactly where this reader does**.
 - Geometry unit tests: arc conventions of each format, the Eagle rotate/mirror order, and S-expression edge cases.
 
 Wider checks, run locally against files that can't be redistributed:
@@ -108,6 +127,9 @@ Wider checks, run locally against files that can't be redistributed:
 | The same boards → EasyEDA → back, and → KiCad → back | 0 differences |
 | A real Eagle 7.7 board (a controller board from a student project) → KiCad, compared with KiCad's own import of the same `.brd` | 119/119 pads identical in position, size and net |
 | 182 symbols and packages from real Eagle libraries → all three formats → back | 182/182 exact |
+| 4 real Altium boards (MAX5719 breakout, VCOCXO breakout, SPI isolator, USB power adapter; 2 and 4 layers): this reader compared with KiCad's own Altium importer | 517/517 pads identical (position, size, net), 1,162 tracks and 1,898 vias identical. Two panel files, which only place copies of other boards, are reported as not converted. |
+| 11 Altium footprints (BGA-900, BGA-676, UFBGA, WLCSP, LFCSP, QFN…) compared with AltiumSharp's JSON dumps of the same files | 2,118/2,118 pads identical in name, position and size |
+| 21 Altium footprints and symbols (incl. the 21-unit Raspberry Pi CM4 symbol) → KiCad and EasyEDA → back | 21/21 exact; the KiCad symbols load and plot in KiCad 10 |
 | 4 parts from EasyEDA's library (STM32F103, RP2040, a USB-C socket, a 0603 resistor: 8 symbols and footprints) → each format → back, and opened in KiCad 10 | 8/8 exact through KiCad and EasyEDA; all load and plot in KiCad |
 
 ## Samples
@@ -117,11 +139,13 @@ Wider checks, run locally against files that can't be redistributed:
 - **`blinky-555`** is a 2-layer 555 LED blinker (39 × 20 mm, SOIC-8, 0805 parts, a pin header, one part on the bottom at 45°, a GND pour on the bottom layer, and rounded corners), in KiCad, Eagle and EasyEDA versions. It was built for this project from footprints in the official KiCad library ([`scripts/make-samples.ts`](scripts/make-samples.ts)).
 - **`demo-parts.lbr`** is a hand-written Eagle library: a resistor, a dual op-amp with three gates, an LDO, an NPN transistor, a header, and a GND supply symbol.
 - **`SOT-23-5_regulator.json`** is a hand-made EasyEDA Standard part (symbol and footprint), laid out like EasyEDA's own JSON.
+- **Altium:** **`usb-power-adapter.PcbDoc`** (a 2-layer board) and **`QFN-24_4x4.PcbLib`** (a QFN-24 footprint) come from the [AltiumSharp](https://github.com/issus/AltiumSharp) test data (Apache-2.0). **`CM4.SchLib`** (the 21-unit Raspberry Pi CM4 symbol) comes from QWaveSystems' [CM4 Altium library](https://github.com/QWaveSystems/QWAVE_Raspberry-Pi-CM4-Altium-Library) (MIT). See [`public/samples/THIRD_PARTY.md`](public/samples/THIRD_PARTY.md).
 - **`demo-parts.zip`** is a hand-written KiCad library (`.kicad_sym` + `.pretty`) with a multi-unit op-amp, an LED, a SOIC-8, and a terminal block with a slot.
 
 ## Limitations
 
-- **Schematics are not converted yet**; neither are EasyEDA Pro files or Altium files.
+- **Schematics are not converted yet**; neither are EasyEDA Pro files.
+- **Altium is input only**, and only binary files are read (not the ASCII `.PcbDoc` variant). Altium's newer "shape-based" regions duplicate the normal ones and are ignored. Panels made of embedded boards are not expanded, so open the board itself.
 - **Zones are written unfilled.** Refill them in the target tool (KiCad: **B**). Thermal relief settings, net classes and design rules are not carried over.
 - **Eagle through-hole pads** can only be round, square, octagonal, or "long" with a fixed 2:1 ratio. Other ovals and rectangles become the nearest Eagle shape, and slots become round drills (all listed in the report).
 - **EasyEDA Standard** has no rounded-rectangle pads (they become rectangles) and stores one symbol per unit. 3D models stay on EasyEDA's server, so only the model's name is carried over. You can get the STEP with the [KiCad JLCPCB part picker](https://github.com/Abdulhamid-Baghdadi/kicad-jlcpcb-part-picker).
@@ -131,7 +155,7 @@ Wider checks, run locally against files that can't be redistributed:
 ## Roadmap
 
 - Schematics (KiCad `.kicad_sch`, Eagle `.sch`, EasyEDA): sheets, wires, labels, buses, and symbol instances.
-- EasyEDA Pro (`.epro` / `.elibz`) and Altium ASCII.
+- EasyEDA Pro (`.epro` / `.elibz`), PADS ASCII (read and write), and IPC-2581 (the open manufacturing exchange standard).
 - Exporting design rules and net classes where formats share them.
 
 ## Development

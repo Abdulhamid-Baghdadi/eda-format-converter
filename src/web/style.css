@@ -3,7 +3,7 @@
   --accent: #146b5a; --accent-ink: #ffffff; --accent-soft: #dcefe8;
   --ok: #1f8a5b; --warn: #b7791f; --bad: #c0392b;
   --canvas: #0f1519; --paper: #fbf9f1; --sym-fill: #fdf6d8; --sym-text: #0d5c63;
-  --kicad: #314cb0; --eagle: #d26a12; --easyeda: #1e88e5;
+  --kicad: #314cb0; --eagle: #d26a12; --easyeda: #1e88e5; --altium: #a8324a;
   --radius: 10px; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.05);
   color-scheme: light;
 }
@@ -59,6 +59,7 @@ main { flex: 1; width: 100%; max-width: 1500px; margin: 0 auto; padding: 18px 24
 .hub .core { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
 .hub .core-t { text-anchor: middle; font-size: 14px; font-weight: 600; fill: var(--accent); }
 .hub .node text { text-anchor: middle; dominant-baseline: middle; fill: #fff; font-weight: 700; font-size: 15px; }
+.hub .node.altium rect { fill: var(--altium); } .hub .spokes .oneway { stroke-dasharray: 2 10; } .hub .arrow { stroke: var(--altium); stroke-width: 3; } .hub .ahp { fill: var(--altium); } .hub .node-note { text-anchor: middle; font-size: 12px; fill: var(--muted); }
 .hub .node.kicad rect { fill: var(--kicad); } .hub .node.eagle rect { fill: var(--eagle); } .hub .node.easyeda rect { fill: var(--easyeda); }
 .hub p { text-align: center; margin: 8px 0 0; }
 .empty h2 { margin: 0 0 4px; font-size: 17px; }
@@ -68,7 +69,7 @@ main { flex: 1; width: 100%; max-width: 1500px; margin: 0 auto; padding: 18px 24
 .privacy { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
 .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; color: #fff; background: #777; letter-spacing: .02em; }
-.badge.kicad { background: var(--kicad); } .badge.eagle { background: var(--eagle); } .badge.easyeda { background: var(--easyeda); }
+.badge.altium { background: var(--altium); } .badge.kicad { background: var(--kicad); } .badge.eagle { background: var(--eagle); } .badge.easyeda { background: var(--easyeda); }
 
 .workspace { display: grid; grid-template-columns: 270px 1fr; gap: 16px; align-items: start; }
 .files { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; position: sticky; top: 12px; box-shadow: var(--shadow); }

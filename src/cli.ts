@@ -2,11 +2,11 @@
 /** eda-convert <files...> --to kicad|eagle|easyeda [--out dir] [--report] */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
-import { convert, type Format } from './core/index';
+import { convert, type Target } from './core/index';
 
 const args = process.argv.slice(2);
 const opt = (n: string) => { const i = args.indexOf(n); if (i < 0) return undefined; const v = args[i + 1]; args.splice(i, 2); return v; };
-const to = opt('--to') as Format | undefined;
+const to = opt('--to') as Target | undefined;
 const out = opt('--out') ?? '.';
 const showReport = args.includes('--report') ? (args.splice(args.indexOf('--report'), 1), true) : false;
 

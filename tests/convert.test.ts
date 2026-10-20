@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { readFile, writeDesign, convert, UnsupportedError, type Format } from '../src/core/index';
+import { readFile, writeDesign, convert, UnsupportedError, type Target } from '../src/core/index';
 import type { Board, Design, Library } from '../src/core/model';
 import { boardDiff } from './boardDiff';
 import { footprintDiff, symbolDiff } from './libDiff';
@@ -12,8 +12,8 @@ const lib = (f: string): Library => {
   const ds = one(f).map(r => r.design);
   return { symbols: ds.flatMap(d => (d.kind === 'library' ? d.library.symbols : [])), footprints: ds.flatMap(d => (d.kind === 'library' ? d.library.footprints : [])) };
 };
-const TARGETS: Format[] = ['kicad', 'eagle', 'easyeda'];
-const back = (d: Design, t: Format) => writeDesign(d, t).flatMap(o => readFile({ name: o.name, data: o.data }).map(r => r.design));
+const TARGETS: Target[] = ['kicad', 'eagle', 'easyeda'];
+const back = (d: Design, t: Target) => writeDesign(d, t).flatMap(o => readFile({ name: o.name, data: o.data }).map(r => r.design));
 
 describe('format detection', () => {
   it.each([
