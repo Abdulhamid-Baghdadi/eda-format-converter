@@ -7,14 +7,14 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { convert, readFile } from '../src/core/index';
 import { readKicadPcb, placeDown } from '../src/core/kicad/read';
 import { boardDiff } from './boardDiff';
 import { netlist, netlistDiff, type Netlist } from '../src/core/sch';
 
 function kicadNetlist(file: string): Netlist {
-  const x = join(dir, file.replace(/^.*[\/]/, '') + '.net.xml');
+  const x = join(dir, basename(file) + '.net.xml');
   run(['sch', 'export', 'netlist', '--format', 'kicadxml', '-o', x, file]);
   const src = readFileSync(x, 'utf8');
   const nets: Netlist['nets'] = [];
