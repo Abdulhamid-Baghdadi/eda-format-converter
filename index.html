@@ -12,13 +12,13 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand">
+    <a class="brand" href="./" id="homeLink" title="Back to the start page">
       <svg viewBox="0 0 32 32" class="logo" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 11h9l-3-3M24 21h-9l3 3"/></svg>
       <div>
         <h1>EDA Format Converter</h1>
-        <p class="tag">KiCad ⇄ Eagle ⇄ EasyEDA, and from Altium · boards, symbols &amp; footprints · runs entirely in your browser</p>
+        <p class="tag">KiCad ⇄ Eagle ⇄ EasyEDA in any direction · Altium → any of them · boards, symbols &amp; footprints · runs in your browser</p>
       </div>
-    </div>
+    </a>
     <nav class="toplinks">
       <button id="matrixBtn" class="ghost">What converts?</button>
       <a class="ghost" href="https://github.com/Abdulhamid-Baghdadi/eda-format-converter" target="_blank" rel="noopener">GitHub</a>
@@ -75,7 +75,7 @@
 
     <section id="workspace" class="workspace" hidden>
       <aside class="files">
-        <div class="files-head"><h3>Files</h3><button id="clearBtn" class="ghost small">Clear</button></div>
+        <div class="files-head"><h3>Files</h3><button id="clearBtn" class="ghost small" title="Remove these files and go back to the start page">← All samples</button></div>
         <ul id="fileList"></ul>
         <div class="dl">
           <button id="zipBtn" class="primary">Download all (.zip)</button>

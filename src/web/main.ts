@@ -235,6 +235,7 @@ function init() {
     const b = (ev.target as HTMLElement).closest('button.sample') as HTMLElement | null;
     if (!b) return;
     const f = b.dataset.f!;
+    if (new URLSearchParams(location.search).get('sample') !== f) history.pushState(null, '', `?sample=${encodeURIComponent(f)}&to=${state.target}`);
     const res = await fetch(`samples/${f}`);
     await addFiles([{ name: f, data: new Uint8Array(await res.arrayBuffer()) }]);
   });
@@ -272,7 +273,16 @@ function init() {
     if (outs.length === 1) download(outs[0].name.split('/').pop()!, outs[0].data);
     else download(`converted-${state.target}.zip`, zipOutputs(outs), 'application/zip');
   });
-  $('clearBtn').addEventListener('click', () => { state.entries = []; render(); });
+  const goHome = (push = true) => {
+    state.entries = [];
+    if (push && location.search) history.pushState(null, '', location.pathname);
+    render();
+    window.scrollTo(0, 0);
+  };
+  $('clearBtn').addEventListener('click', () => goHome());
+  $('homeLink').addEventListener('click', ev => { ev.preventDefault(); goHome(); });
+  // browser Back after opening a sample returns to the start page
+  window.addEventListener('popstate', () => { if (!new URLSearchParams(location.search).get('sample')) goHome(false); });
   $('fitBtn').addEventListener('click', () => { if (lastBox) fit(lastBox); });
   $('unitPrev').addEventListener('click', () => { state.sel.unit = Math.max(0, state.sel.unit - 1); render(true); });
   $('unitNext').addEventListener('click', () => { state.sel.unit++; const e = state.entries[state.sel.entry]; const r = e.results![state.sel.result]; const it = items(r)[state.sel.item]; const n = r.input.design.kind === 'library' && it.kind === 'symbol' ? r.input.design.library.symbols[it.idx].units.length : 1; state.sel.unit = Math.min(n - 1, state.sel.unit); render(true); });
